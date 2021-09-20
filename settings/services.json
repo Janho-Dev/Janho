@@ -1,0 +1,19 @@
+{
+	"game": {
+		"name": "Janho",
+		"appid": "620416383",
+		"cid": 0
+	},
+	"needExecNative": true,
+	"configs": [
+		{
+			"appid": "620416383",
+			"services": [
+				{
+					"service_id": "235",
+					"enable": true
+				}
+			]
+		}
+	]
+}
