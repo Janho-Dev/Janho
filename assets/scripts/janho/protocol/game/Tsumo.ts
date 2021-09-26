@@ -19,7 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * 
  * @author Saisana299
- * @link https://github.com/Janho-Dev/Janho-Server
+ * @link https://github.com/Janho-Dev/Janho
  * 
  */
 
@@ -33,7 +33,19 @@ export class Tsumo implements JanhoProtocol {
         this.parent = parent
     }
 
-    public procReceive(data: string): void{}
+    public procReceive(data: string): void{
+        const parsed = JSON.parse(data)
+        if("protocol" in parsed){
+            if(parsed["protocol"] === "tsumo"){
+                if("hai" in parsed){
+                    if(typeof parsed["hai"] === "number"){
+                        const game = this.parent.getGame()
+                        if(game !== null) game.onTsumo(parsed["hai"])
+                    }
+                }
+            }
+        }
+    }
 
     public procEmit(json: {}): void{
         const data = JSON.stringify(json)

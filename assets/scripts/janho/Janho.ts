@@ -19,14 +19,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * 
  * @author Saisana299
- * @link https://github.com/Janho-Dev/Janho-Server
+ * @link https://github.com/Janho-Dev/Janho
  * 
+ */
+
+/**
+ * TODO
+ * ・タイマーがおかしい
  */
 
 import * as Prefabs from "./Prefabs"
 import {Socket} from "./Socket"
 import {Controller} from "./Controller"
 import {Protocol} from "./protocol/Protocol"
+import {GameController} from "./games/GameController"
+import { Game } from "./games/Game"
 const {ccclass, property} = cc._decorator
 
 @ccclass
@@ -41,6 +48,9 @@ export default class Janho extends cc.Component {
     MAIN_NODE: cc.Node = null
     @property(cc.Node)
     PREFABS: cc.Node = null
+
+    @property(GameController)
+    GAME_CONTROLLER: GameController = null
 
     public onLoad(){
         this.isConnected = false
@@ -61,6 +71,20 @@ export default class Janho extends cc.Component {
 		this.network.receive(data)
 	}
 
+    public setGameController(obj: GameController){
+        this.GAME_CONTROLLER = obj
+    }
+    public deleteGameController(){
+        //初期化?
+        this.GAME_CONTROLLER = null
+    }
+    public getGameController(): GameController | null{
+        return this.GAME_CONTROLLER
+    }
+    public getGame(): Game | null{
+        if(this.GAME_CONTROLLER === null) return null
+        return this.GAME_CONTROLLER.getGame()
+    }
     public getSocket(): Socket{
         return this.socket
     }
@@ -69,5 +93,8 @@ export default class Janho extends cc.Component {
     }
     public getController(): Controller{
         return this.controller
+    }
+    public getPrefabs(): Prefabs.default{
+        return this.prefabs
     }
 }

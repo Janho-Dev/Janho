@@ -19,7 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * 
  * @author Saisana299
- * @link https://github.com/Janho-Dev/Janho-Server
+ * @link https://github.com/Janho-Dev/Janho
  * 
  */
 
@@ -35,23 +35,20 @@ export class Kakan implements JanhoProtocol {
 
     public procReceive(data: string): void{
         const parsed = JSON.parse(data)
-        if("hai" in parsed){
-            if(typeof parsed["hai"] === "number" && Array.isArray(parsed["combi"])){
-                if(parsed["combi"].length !== 4) return
-                for(let hai of parsed["combi"]){
-                    if(typeof hai !== "number") return
+        if("protocol" in parsed){
+            if(parsed["protocol"] === "kakan"){
+                if("combi" in parsed && "kaze" in parsed){
+                    if(typeof parsed["kaze"] === "number" && Array.isArray(parsed["combi"])){
+                        if(parsed["combi"].length !== 4) return
+                        for(let hai of parsed["combi"]){
+                            if(typeof hai !== "number") return
+                        }
+                        if(parsed["kaze"] === 0 || parsed["kaze"] === 1 || parsed["kaze"] === 2 || parsed["kaze"] === 3){
+                            const game = this.parent.getGame()
+                            if(game !== null) game.onKakan(parsed["combi"], parsed["kaze"])
+                        }
+                    }
                 }
-                //const roomId = this.parent.getPlayerRoomId(socketId)
-                //if(roomId !== null){
-                    //const room = this.parent.getRoom(roomId)
-                    //if(room !== null){
-                        //const kaze = room.getKaze(socketId)
-                        //if(kaze === null) return
-                        //const result = room.onKakan(kaze, parsed["hai"], parsed["combi"])
-                        //if(!result) this.procEmit(socketId, {"protocol": "kakan", "result": false})
-                        //return true --> Game::onKakan()
-                    //}
-                //}
             }
         }
     }

@@ -19,7 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * 
  * @author Saisana299
- * @link https://github.com/Janho-Dev/Janho-Server
+ * @link https://github.com/Janho-Dev/Janho
  * 
  */
 
@@ -134,6 +134,7 @@ export class Controller {
         const game = cc.instantiate(this.prefabs.GAME_TEMP)
         const gameC: GameController = game.getComponent("GameController")
         gameC.setParent(this.parent)
+        gameC.setMode("4")//todo
         this.status = "game"
         this.node.addChild(game)
     }

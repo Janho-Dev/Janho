@@ -19,8 +19,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * 
  * @author Saisana299
- * @link https://github.com/Janho-Dev/Janho-Server
+ * @link https://github.com/Janho-Dev/Janho
  * 
  */
 
 export type janho_node = "title" | "home" | "room" | "game"
+export type game_mode = "4" | "3" | "event"
+export type kaze_number = 0 | 1 | 2 | 3

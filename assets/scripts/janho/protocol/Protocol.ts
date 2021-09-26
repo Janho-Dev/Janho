@@ -19,7 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * 
  * @author Saisana299
- * @link https://github.com/Janho-Dev/Janho-Server
+ * @link https://github.com/Janho-Dev/Janho
  * 
  */
 
@@ -99,7 +99,6 @@ export class Protocol {
         if("protocol" in parsed){
             const protocol = this.getProtocol(parsed["protocol"])
             if(protocol !== null){
-                const parsed = JSON.parse(data)
                 if(this.isWait){
                     if("result" in parsed){
                         if(typeof parsed["result"] === "boolean"){
@@ -107,6 +106,8 @@ export class Protocol {
                         }else{
                             this.result = false
                         }
+                    }else{
+                        this.result = false
                     }
                 }
                 protocol.procReceive(data)
@@ -118,12 +119,16 @@ export class Protocol {
      * @param protocolName プロトコル名
      * @param json JSON
      */
-    public emit(protocolName: string, json: {}): Promise<boolean> | null{
+    public emit(protocolName: string, json: {}, waiting: boolean = true): Promise<boolean> | null{
         if(this.isWait) return null
         const protocol = this.getProtocol(protocolName)
         if(protocol !== null){
-            this.isWait = true
             protocol.procEmit(json)
+            if(waiting === false){
+                this.isWait = false
+                return null
+            }
+            this.isWait = true
             const self = this
             const wait = new Promise<boolean>((res, rej) => {
                 async function loop(i: number){
@@ -134,20 +139,29 @@ export class Protocol {
                                     self.isWait = false
                                     self.result = null
                                     res(true)
+                                    return
                                 }
                                 else{
                                     self.isWait = false
                                     self.result = null
                                     res(false)
+                                    return
                                 }
                             }
                             resolve(i + 1)
-                        }, 1)
+                        }, 10)
                     })
+                    if(self.isWait === false){
+                        self.isWait = false
+                        self.result = null
+                        res(false)
+                        return
+                    }
                     if (count > 1000) {
                         self.isWait = false
                         self.result = null
                         res(false)
+                        return
                     } else {
                         loop(count)
                     }
