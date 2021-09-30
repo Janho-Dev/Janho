@@ -58,7 +58,7 @@ export class Controller {
         this.node.removeAllChildren()
         const title = cc.instantiate(this.prefabs.TITLE_TEMP)
         const self = this
-        title.getChildByName("Play Button").on("click", () => {
+        title.getChildByName("Play Button").on(cc.Node.EventType.TOUCH_END, () => {
             if(!(self.parent.isConnected)){
                 const err = cc.instantiate(self.prefabs.TITLE_ERROR)
                 const old = title.getChildByName("Title Error Temp")
@@ -82,7 +82,7 @@ export class Controller {
         this.node.removeAllChildren()
         const home = cc.instantiate(this.prefabs.HOME_TEMP)
         const self = this
-        home.getChildByName("Game4 Button").on("click", () => {
+        home.getChildByName("Game4 Button").on(cc.Node.EventType.TOUCH_END, () => {
             const userId = home.getChildByName("User EBox").getComponent(cc.EditBox).string
             const roomId = home.getChildByName("Room EBox").getComponent(cc.EditBox).string
             if(userId === "" || roomId === "") return
@@ -119,8 +119,8 @@ export class Controller {
         this.node.removeAllChildren()
         const room = cc.instantiate(this.prefabs.ROOM_TEMP)
         const self = this
-        room.getChildByName("Ready Button").on("click", () => {
-            self.parent.getProtocol().emit("readyRoom", {"protocol": "readyRoom", "bool": true})
+        room.getChildByName("Ready Button").on(cc.Node.EventType.TOUCH_END, () => {
+            self.parent.getProtocol().emit("readyRoom", {"protocol": "readyRoom", "bool": true}, false)
         }, this)
         this.status = "room"
         this.node.addChild(room)

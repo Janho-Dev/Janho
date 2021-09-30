@@ -28,7 +28,7 @@ import Janho from "../Janho"
 import {Game} from "./Game"
 import {Game4} from "./default/Game4"
 import Prefabs from "../Prefabs"
-import { Protocol } from "../protocol/Protocol"
+import {Protocol} from "../protocol/Protocol"
 const {ccclass, property} = cc._decorator
 
 @ccclass
@@ -50,6 +50,11 @@ export class GameController extends cc.Component {
     @property(cc.Label) kazeLabel: cc.Label = null
 
     @property(cc.Button) skipButton: cc.Button = null
+    @property(cc.Button) chiButton: cc.Button = null
+    @property(cc.Button) ponButton: cc.Button = null
+    @property(cc.Button) kanButton: cc.Button = null
+    @property(cc.Button) horaButton: cc.Button = null
+    @property(cc.Label)  horaBtnLabel: cc.Label = null
 
     @property
     game: Game = null

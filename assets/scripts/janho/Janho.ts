@@ -25,7 +25,7 @@
 
 /**
  * TODO
- * ・タイマーがおかしい
+ * ・ボタンが残るバグ
  */
 
 import * as Prefabs from "./Prefabs"
@@ -33,7 +33,7 @@ import {Socket} from "./Socket"
 import {Controller} from "./Controller"
 import {Protocol} from "./protocol/Protocol"
 import {GameController} from "./games/GameController"
-import { Game } from "./games/Game"
+import {Game} from "./games/Game"
 const {ccclass, property} = cc._decorator
 
 @ccclass
