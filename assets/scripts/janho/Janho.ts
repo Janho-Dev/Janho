@@ -23,10 +23,6 @@
  * 
  */
 
-/**
- * TODO
- * ・ボタンが残るバグ
- */
 
 import * as Prefabs from "./Prefabs"
 import {Socket} from "./Socket"
@@ -34,6 +30,7 @@ import {Controller} from "./Controller"
 import {Protocol} from "./protocol/Protocol"
 import {GameController} from "./games/GameController"
 import {Game} from "./games/Game"
+import { RoomController } from "./room/RoomController"
 const {ccclass, property} = cc._decorator
 
 @ccclass
@@ -51,6 +48,8 @@ export default class Janho extends cc.Component {
 
     @property(GameController)
     GAME_CONTROLLER: GameController = null
+    @property(RoomController)
+    ROOM_CONTROLLER: RoomController = null
 
     public onLoad(){
         this.isConnected = false
@@ -81,6 +80,18 @@ export default class Janho extends cc.Component {
     public getGameController(): GameController | null{
         return this.GAME_CONTROLLER
     }
+
+    public setRoomController(obj: RoomController){
+        this.ROOM_CONTROLLER = obj
+    }
+    public deleteRoomController(){
+        //初期化?
+        this.ROOM_CONTROLLER = null
+    }
+    public getRoomController(): RoomController | null{
+        return this.ROOM_CONTROLLER
+    }
+
     public getGame(): Game | null{
         if(this.GAME_CONTROLLER === null) return null
         return this.GAME_CONTROLLER.getGame()

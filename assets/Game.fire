@@ -553,6 +553,9 @@
       },
       {
         "__uuid__": "3e8a9459-8d28-46b1-972e-6a03dc9c6694"
+      },
+      {
+        "__uuid__": "567bc9c0-845a-455b-b2b4-9c6b059d0b4a"
       }
     ],
     "_id": "0eUbga9V5MIY1RDCmLhykX"
@@ -571,6 +574,7 @@
     "PREFABS": {
       "__id__": 7
     },
+    "GAME_CONTROLLER": null,
     "_id": "b2dqG6GG1ODrHZKUnpHZ22"
   },
   {

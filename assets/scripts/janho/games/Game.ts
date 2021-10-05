@@ -27,7 +27,8 @@ import {kaze_number} from "../utils/Types";
 
 export interface Game {
     onTimein(time: number): void
-    onHaipai(kaze: kaze_number, hai: number[]): void
+    onHaipai(kaze: kaze_number, hai: number[], dora: number, names: {[key in kaze_number]: string}): void
+    onTurn(kaze: kaze_number, n: number): void
     onTsumo(hai: number): void
     onDahai(hai: number, kaze: kaze_number): void
     onTimeout(json: string): void
@@ -37,4 +38,6 @@ export interface Game {
     onKan(combi: number[], kaze: kaze_number): void
     onAnkan(combi: number[], kaze: kaze_number): void
     onKakan(combi: number[], kaze: kaze_number): void
+    onHora(kaze: kaze_number, json: string, json2: string): void
+    onResetTestFunc(): void
 }

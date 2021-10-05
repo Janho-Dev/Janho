@@ -24,10 +24,9 @@
  */
 
 import * as Janho from "../../Janho"
-import { kaze_number } from "../../utils/Types"
 import {JanhoProtocol} from "../JanhoProtocol"
 
-export class Haipai implements JanhoProtocol {
+export class Trun implements JanhoProtocol {
     private readonly parent: Janho.default
     
     constructor(parent: Janho.default){
@@ -37,23 +36,12 @@ export class Haipai implements JanhoProtocol {
     public procReceive(data: string): void{
         const parsed = JSON.parse(data)
         if("protocol" in parsed){
-            if(parsed["protocol"] === "haipai"){
-                if("kaze" in parsed && "hai" in parsed && "dora" in parsed){
-                    let names: {[key in kaze_number]: string} = {0: "", 1: "", 2: "", 3: ""}
-                    if("ton" in parsed && "nan" in parsed && "sha" in parsed && "pei" in parsed){
-                        names = {0: parsed["ton"], 1: parsed["nan"], 2: parsed["sha"], 3: parsed["pei"]}
-                    }
-                    if(typeof parsed["kaze"] === "number" && Array.isArray(parsed["hai"])){
-                        if(parsed["hai"].length !== 13) return
-                        for(let hai of parsed["hai"]){
-                            if(typeof hai !== "number") return
-                        }
-                        if(typeof parsed["dora"] !== "number") return
-                        const game = this.parent.getGame()
-                        if(game !== null){
-                            if(parsed["kaze"] === 0 || parsed["kaze"] === 1 || parsed["kaze"] === 2 || parsed["kaze"] === 3){
-                                game.onHaipai(parsed["kaze"], parsed["hai"], parsed["dora"], names)
-                            }
+            if(parsed["protocol"] === "turn"){
+                if("kaze" in parsed && "amari" in parsed){
+                    if(typeof parsed["kaze"] === "number" && typeof parsed["amari"] === "number"){
+                        if(parsed["kaze"] === 0 || parsed["kaze"] === 1 || parsed["kaze"] === 2 || parsed["kaze"] === 3){
+                            const game = this.parent.getGame()
+                            if(game !== null) game.onTurn(parsed["kaze"], parsed["amari"])
                         }
                     }
                 }

@@ -19,14 +19,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * 
  * @author Saisana299
- * @link https://github.com/Janho-Dev/Janho
+ * @link https://github.com/Janho-Dev/Janho-Server
  * 
  */
 
-import * as Janho from "../../Janho"
-import {JanhoProtocol} from "../JanhoProtocol"
+ import * as Janho from "../../Janho"
+ import {JanhoProtocol} from "../JanhoProtocol"
 
-export class Hora implements JanhoProtocol {
+export class ResetRoom implements JanhoProtocol {
     private readonly parent: Janho.default
     
     constructor(parent: Janho.default){
@@ -35,16 +35,13 @@ export class Hora implements JanhoProtocol {
 
     public procReceive(data: string): void{
         const parsed = JSON.parse(data)
-        if("protocol" in parsed){
-            if(parsed["protocol"] === "hora"){
-                if("data" in parsed && "data2" in parsed && "kaze" in parsed){
-                    const json = JSON.stringify(parsed["data"])
-                    const json2 = JSON.stringify(parsed["data2"])
-                    const game = this.parent.getGame()
-                    if(game !== null) game.onHora(parsed["kaze"], json, json2)
-                }
-            }
-        }
+        const controller = this.parent.getController()
+        //TODO
+        //if(controller.getStatus() === "game"){
+        //    controller.changeNode("room")
+        //}
+        const game = this.parent.getGame()
+        if(game !== null) game.onResetTestFunc()
     }
 
     public procEmit(json: {}): void{

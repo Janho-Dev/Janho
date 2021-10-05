@@ -51,6 +51,9 @@ import {Chi} from "./game/Chi"
 import {Pon} from "./game/Pon"
 import {Ankan} from "./game/Ankan"
 import {Kakan} from "./game/Kakan"
+import {ResetRoom} from "./room/ResetRoom"
+import { RoomUpdate } from "./room/RoomUpdate"
+import { Trun } from "./game/Turn"
 
 export class Protocol {
     private readonly parent: Janho.default
@@ -71,6 +74,8 @@ export class Protocol {
             "readyRoom": new ReadyRoom(this.parent),
             "quitRoom": new QuitRoom(this.parent),
             "startRoom": new StartRoom(this.parent),
+            "resetRoom": new ResetRoom(this.parent),
+            "roomUpdate": new RoomUpdate(this.parent),
 
             "kaikyoku": new Kaikyoku(this.parent),
             "haipai": new Haipai(this.parent),
@@ -86,7 +91,8 @@ export class Protocol {
             "chi": new Chi(this.parent),
             "pon": new Pon(this.parent),
             "ankan": new Ankan(this.parent),
-            "kakan": new Kakan(this.parent)
+            "kakan": new Kakan(this.parent),
+            "turn": new Trun(this.parent)
         }
     }
 
@@ -99,15 +105,13 @@ export class Protocol {
         if("protocol" in parsed){
             const protocol = this.getProtocol(parsed["protocol"])
             if(protocol !== null){
-                if(this.isWait){
+                if(this.isWait && this.result === null){
                     if("result" in parsed){
                         if(typeof parsed["result"] === "boolean"){
                             this.result = parsed["result"]
                         }else{
                             this.result = false
                         }
-                    }else{
-                        this.result = false
                     }
                 }
                 protocol.procReceive(data)

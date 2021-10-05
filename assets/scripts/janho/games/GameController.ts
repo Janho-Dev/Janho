@@ -35,19 +35,31 @@ const {ccclass, property} = cc._decorator
 export class GameController extends cc.Component {
     private parent: Janho
     private mode: Types.game_mode
+    anim = cc.repeatForever(cc.sequence(cc.delayTime(0.5), cc.fadeOut(1.0), cc.delayTime(0.5), cc.fadeIn(1.0)))
 
     @property(cc.Node)
     tehai: cc.Node = null
-    @property(cc.Node)
-    tsumohai: cc.Node = null
+    @property(cc.Prefab)
+    tsumohai: cc.Prefab = null
+    @property(cc.Prefab)
+    nakihai_node: cc.Prefab = null
 
     @property(cc.Node) sutehai: cc.Node = null
     @property(cc.Node) kamiSutehai: cc.Node = null
     @property(cc.Node) simoSutehai: cc.Node = null
     @property(cc.Node) toiSutehai: cc.Node = null
 
+    @property(cc.Node) nakihai: cc.Node = null
+    @property(cc.Node) kamiNakihai: cc.Node = null
+    @property(cc.Node) simoNakihai: cc.Node = null
+    @property(cc.Node) toiNakihai: cc.Node = null
+
     @property(cc.Label) timeLabel: cc.Label = null
+    @property(cc.Label) amariLabel: cc.Label = null
     @property(cc.Label) kazeLabel: cc.Label = null
+    @property(cc.Label) kamiKazeLabel: cc.Label = null
+    @property(cc.Label) simoKazeLabel: cc.Label = null
+    @property(cc.Label) toiKazeLabel: cc.Label = null
 
     @property(cc.Button) skipButton: cc.Button = null
     @property(cc.Button) chiButton: cc.Button = null
@@ -55,6 +67,20 @@ export class GameController extends cc.Component {
     @property(cc.Button) kanButton: cc.Button = null
     @property(cc.Button) horaButton: cc.Button = null
     @property(cc.Label)  horaBtnLabel: cc.Label = null
+
+    @property(cc.Button) testButton: cc.Button = null
+
+    @property(cc.Prefab) resultTemp: cc.Prefab = null
+
+    @property(cc.Label) nameLabel: cc.Label = null
+    @property(cc.Label) kamiNameLabel: cc.Label = null
+    @property(cc.Label) simoNameLabel: cc.Label = null
+    @property(cc.Label) toiNameLabel: cc.Label = null
+
+    @property(cc.Node) light: cc.Node = null
+    @property(cc.Node) kamiLight: cc.Node = null
+    @property(cc.Node) toiLight: cc.Node = null
+    @property(cc.Node) simoLight: cc.Node = null
 
     @property
     game: Game = null
@@ -67,7 +93,17 @@ export class GameController extends cc.Component {
         }else{
             return
         }
+        this.kazeLabel.string = "しばらくお待ち下さい"
+        this.kazeLabel.node.runAction(this.anim)
         this.parent.getProtocol().emit("startRoom", {"protocol": "startRoom", "bool": true}, false)
+        this.light.runAction(cc.repeatForever(cc.sequence(cc.delayTime(0.2), cc.fadeOut(0.4), cc.delayTime(0.2), cc.fadeIn(0.4))))
+        this.kamiLight.runAction(cc.repeatForever(cc.sequence(cc.delayTime(0.2), cc.fadeOut(0.4), cc.delayTime(0.2), cc.fadeIn(0.4))))
+        this.simoLight.runAction(cc.repeatForever(cc.sequence(cc.delayTime(0.2), cc.fadeOut(0.4), cc.delayTime(0.2), cc.fadeIn(0.4))))
+        this.toiLight.runAction(cc.repeatForever(cc.sequence(cc.delayTime(0.2), cc.fadeOut(0.4), cc.delayTime(0.2), cc.fadeIn(0.4))))
+        this.light.active = false
+        this.kamiLight.active = false
+        this.simoLight.active = false
+        this.toiLight.active = false
     }
     public getGame(): Game{
         return this.game
@@ -84,5 +120,8 @@ export class GameController extends cc.Component {
     }
     public getProtocol(): Protocol{
         return this.parent.getProtocol()
+    }
+    public getParent(): Janho{
+        return this.parent
     }
 }

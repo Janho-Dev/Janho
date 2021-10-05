@@ -27,6 +27,7 @@ import * as Types from "./utils/Types"
 import Janho from "./Janho"
 import Prefabs from "./Prefabs"
 import {GameController} from "./games/GameController"
+import {RoomController} from "./room/RoomController"
 
 export class Controller {
     private readonly parent: Janho
@@ -122,6 +123,8 @@ export class Controller {
         room.getChildByName("Ready Button").on(cc.Node.EventType.TOUCH_END, () => {
             self.parent.getProtocol().emit("readyRoom", {"protocol": "readyRoom", "bool": true}, false)
         }, this)
+        const roomC: RoomController = room.getComponent("RoomController")
+        roomC.setParent(this.parent)
         this.status = "room"
         this.node.addChild(room)
     }
