@@ -51,12 +51,20 @@ export default class Janho extends cc.Component {
     @property(RoomController)
     ROOM_CONTROLLER: RoomController = null
 
+    @property(cc.Prefab)
+    particle: cc.Prefab = null;
+
     public onLoad(){
         this.isConnected = false
         this.prefabs = this.PREFABS.getComponent("Prefabs")
         this.controller = new Controller(this, this.MAIN_NODE, this.prefabs)
         this.socket = new Socket(this)
         this.network = new Protocol(this)
+
+        const self = this
+        this.MAIN_NODE.on(cc.Node.EventType.TOUCH_START, function (event: any) { 
+            self.createParticleme(event)
+        }, this.node)
     }
 
     public start(){
@@ -107,5 +115,15 @@ export default class Janho extends cc.Component {
     }
     public getPrefabs(): Prefabs.default{
         return this.prefabs
+    }
+
+    public createParticleme(event: any){
+        const self = this
+        var touches = event.getTouches()
+        var touchLoc = touches[0].getLocation()
+        var prefab = cc.instantiate(self.particle)
+        self.node.addChild(prefab)
+        var pos = prefab.convertToNodeSpaceAR(touchLoc)
+        prefab.setPosition(pos)
     }
 }

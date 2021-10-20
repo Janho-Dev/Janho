@@ -26,3 +26,4 @@
 export type janho_node = "title" | "home" | "room" | "game"
 export type game_mode = "4" | "3" | "event"
 export type kaze_number = 0 | 1 | 2 | 3
+export type ryukyoku = "荒牌平局" | "九種九牌" | "四家立直" | "三家和" | "四風連打" | "四槓散了"

@@ -82,6 +82,24 @@ export class GameController extends cc.Component {
     @property(cc.Node) toiLight: cc.Node = null
     @property(cc.Node) simoLight: cc.Node = null
 
+    @property(cc.Node) logoNode: cc.Node = null
+    @property(cc.Node) kamiLogoNode: cc.Node = null
+    @property(cc.Node) simoLogoNode: cc.Node = null
+    @property(cc.Node) toiLogoNode: cc.Node = null
+
+    @property(cc.Prefab) chiLogo: cc.Prefab = null
+    @property(cc.Prefab) kanLogo: cc.Prefab = null
+    @property(cc.Prefab) peLogo: cc.Prefab = null
+    @property(cc.Prefab) ponLogo: cc.Prefab = null
+    @property(cc.Prefab) ronLogo: cc.Prefab = null
+    @property(cc.Prefab) ron2Logo: cc.Prefab = null
+    @property(cc.Prefab) tsumoLogo: cc.Prefab = null
+    @property(cc.Prefab) tsumo2Logo: cc.Prefab = null
+
+    @property(cc.Node) doraNode: cc.Node = null
+
+    @property(cc.Prefab) ryukyokuNode: cc.Prefab = null
+
     @property
     game: Game = null
 
@@ -93,8 +111,8 @@ export class GameController extends cc.Component {
         }else{
             return
         }
-        this.kazeLabel.string = "しばらくお待ち下さい"
-        this.kazeLabel.node.runAction(this.anim)
+        this.amariLabel.string = "しばらくお待ち下さい"
+        this.amariLabel.node.runAction(this.anim)
         this.parent.getProtocol().emit("startRoom", {"protocol": "startRoom", "bool": true}, false)
         this.light.runAction(cc.repeatForever(cc.sequence(cc.delayTime(0.2), cc.fadeOut(0.4), cc.delayTime(0.2), cc.fadeIn(0.4))))
         this.kamiLight.runAction(cc.repeatForever(cc.sequence(cc.delayTime(0.2), cc.fadeOut(0.4), cc.delayTime(0.2), cc.fadeIn(0.4))))

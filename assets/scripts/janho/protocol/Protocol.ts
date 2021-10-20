@@ -114,7 +114,13 @@ export class Protocol {
                         }
                     }
                 }
-                protocol.procReceive(data)
+                if(this.isWait){
+                    setTimeout(() => {
+                        protocol.procReceive(data)
+                    }, 10)
+                }else{
+                    protocol.procReceive(data)
+                }
             }
         }
     }

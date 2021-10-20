@@ -120,10 +120,16 @@ export class Controller {
         this.node.removeAllChildren()
         const room = cc.instantiate(this.prefabs.ROOM_TEMP)
         const self = this
-        room.getChildByName("Ready Button").on(cc.Node.EventType.TOUCH_END, () => {
-            self.parent.getProtocol().emit("readyRoom", {"protocol": "readyRoom", "bool": true}, false)
-        }, this)
         const roomC: RoomController = room.getComponent("RoomController")
+        room.getChildByName("Ready Button").on(cc.Node.EventType.TOUCH_END, () => {
+            if(!roomC.isReady){
+                self.parent.getProtocol().emit("readyRoom", {"protocol": "readyRoom", "bool": true}, false)
+                roomC.isReady = true
+            }else{
+                self.parent.getProtocol().emit("readyRoom", {"protocol": "readyRoom", "bool": false}, false)
+                roomC.isReady = false
+            }
+        }, this)
         roomC.setParent(this.parent)
         this.status = "room"
         this.node.addChild(room)

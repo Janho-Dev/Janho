@@ -33,7 +33,19 @@ export class Kantsumo implements JanhoProtocol {
         this.parent = parent
     }
 
-    public procReceive(data: string): void{}
+    public procReceive(data: string): void{
+        const parsed = JSON.parse(data)
+        if("protocol" in parsed){
+            if(parsed["protocol"] === "kantsumo"){
+                if("hai" in parsed){
+                    if(typeof parsed["hai"] === "number"){
+                        const game = this.parent.getGame()
+                        if(game !== null) game.onKantsumo(parsed["hai"])
+                    }
+                }
+            }
+        }
+    }
 
     public procEmit(json: {}): void{
         const data = JSON.stringify(json)

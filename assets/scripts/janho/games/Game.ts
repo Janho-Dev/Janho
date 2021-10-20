@@ -23,7 +23,7 @@
  * 
  */
 
-import {kaze_number} from "../utils/Types";
+import {kaze_number, ryukyoku} from "../utils/Types";
 
 export interface Game {
     onTimein(time: number): void
@@ -40,4 +40,7 @@ export interface Game {
     onKakan(combi: number[], kaze: kaze_number): void
     onHora(kaze: kaze_number, json: string, json2: string): void
     onResetTestFunc(): void
+    onRyukyoku(type: ryukyoku): void
+    onRyukyokuByPlayer(kaze: kaze_number, type: ryukyoku): void
+    onKantsumo(hai: number): void
 }

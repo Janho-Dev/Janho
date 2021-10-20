@@ -575,6 +575,10 @@
       "__id__": 7
     },
     "GAME_CONTROLLER": null,
+    "ROOM_CONTROLLER": null,
+    "particle": {
+      "__uuid__": "12236c21-6193-419f-b87e-55446baf1aa5"
+    },
     "_id": "b2dqG6GG1ODrHZKUnpHZ22"
   },
   {

@@ -29,6 +29,7 @@ const {ccclass, property} = cc._decorator
 @ccclass
 export class RoomController extends cc.Component {
     private parent: Janho
+    isReady = false
 
     @property(cc.Label) p1_Label: cc.Label = null
     @property(cc.Label) p2_Label: cc.Label = null

@@ -27,7 +27,7 @@ export class Socket{
 
     constructor(parent){
         this.parent = parent
-        this.socket = io.connect("https://ws.janhoyaba.com:443/")
+        this.socket = io.connect("https://sub.janhoyaba.com:443/", {transports: ["polling"]})
         //this.socket = io.connect("http://localhost:3000/")
 
         const self = this
