@@ -26,7 +26,7 @@
 import * as Janho from "../../Janho"
 import {JanhoProtocol} from "../JanhoProtocol"
 
-export class Dahai implements JanhoProtocol {
+export class Richi implements JanhoProtocol {
     private readonly parent: Janho.default
     
     constructor(parent: Janho.default){
@@ -36,12 +36,12 @@ export class Dahai implements JanhoProtocol {
     public procReceive(data: string): void{
         const parsed = JSON.parse(data)
         if("protocol" in parsed){
-            if(parsed["protocol"] === "dahai"){
+            if(parsed["protocol"] === "richi"){
                 if("hai" in parsed && "kaze" in parsed){
                     if(typeof parsed["hai"] === "number" && typeof parsed["kaze"] === "number"){
                         if(parsed["kaze"] === 0 || parsed["kaze"] === 1 || parsed["kaze"] === 2 || parsed["kaze"] === 3){
                             const game = this.parent.getGame()
-                            if(game !== null) game.onDahai(parsed["hai"], parsed["kaze"], false)
+                            if(game !== null) game.onRichi(parsed["hai"], parsed["kaze"])
                         }
                     }
                 }

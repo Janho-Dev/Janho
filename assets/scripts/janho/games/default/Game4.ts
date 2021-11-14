@@ -26,6 +26,8 @@
 /**
  * TODO
  * ・チー実装
+ * ・リーチ実装
+ * ・流局からの点数移動
  * 
  * ・重複部分のリファクタリング
  */
@@ -43,6 +45,7 @@ export class Game4 implements Game {
     private tehai: number[] | null
     private tsumohai_cache: number
     private isTsumo: boolean = false
+    private preRichi: boolean = false
     private kaze: kaze_number | null
     private furo: {[key in kaze_number]: number[][]} = {0:[],1:[],2:[],3:[]}
     private dahai_cache: {"kaze": kaze_number, "uuid": string, "anim": cc.ActionInterval} 
@@ -69,6 +72,8 @@ export class Game4 implements Game {
                 this.controller.timeLabel.string = ""
                 const tp = this.controller.tehai.getChildByName("Tsumo Node Temp")
                 this.controller.tehai.removeChild(tp)
+
+                this.updateTehai(this.tehai)
             }
         }, 1000)
         this.timer_id = this.timer_id + 1
@@ -164,6 +169,7 @@ export class Game4 implements Game {
         const self = this
         const hai = _hai
         temp.on(cc.Node.EventType.TOUCH_END, () => {
+            if(self.preRichi) return
             const result = self.controller.getProtocol().emit("dahai", {"protocol": "dahai", "hai": hai})
             if(result === null) return
             result.then((bool) => {
@@ -176,6 +182,8 @@ export class Game4 implements Game {
                     self.dahai_cache["uuid"] = s_temp.uuid
                     self.dahai_cache["anim"] = cc.repeatForever(cc.sequence(cc.fadeIn(0.5), cc.fadeOut(0.5)))
                     self.isTsumo = false
+
+                    self.updateTehai(self.tehai)
                 }
             })
         })
@@ -184,10 +192,11 @@ export class Game4 implements Game {
         this.controller.tehai.getChildByName("Tsumo Node Temp").addChild(temp)
     }
 
-    public onDahai(hai: number, kaze: kaze_number): void {
+    public onDahai(hai: number, kaze: kaze_number, isRichi: boolean = false): void {
         const cha = this.getCha(kaze)
         const n = this.getHaiTempNum(hai)
         const temp = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
+        if(isRichi) temp.rotation = 90
 
         if(this.dahai_cache["kaze"] !== null){
             const p_cha = this.getCha(this.dahai_cache["kaze"])
@@ -277,6 +286,7 @@ export class Game4 implements Game {
                 }
 
                 this.controller.node.getChildByName("Chi Button").once(cc.Node.EventType.TOUCH_END, () => {
+                    // {"protocol":"candidate","data":{"chi":{"hai":[210],"combi":[[210,220,230]],"from":0}}}
                     //コンビ数確認→1つ：続行→２つ以上：選択画面表示
                     /*
                     const old_id = self.timer_id
@@ -574,6 +584,95 @@ export class Game4 implements Game {
                         })
                     }, this)
                 }
+            }
+        }
+        if("richi" in parsed){
+            if("hai" in parsed["richi"]){
+                const richiHai: number[] = parsed["richi"]["hai"]
+                let hai: string[] = []
+                for(let rh of richiHai){
+                    hai.push(rh.toString())
+                }
+                this.controller.node.getChildByName("Richi Button").active = true
+                const self = this
+                this.controller.node.getChildByName("Richi Button").once(cc.Node.EventType.TOUCH_END, () => {
+                    self.preRichi = true
+                    self.clearButton()
+                    //richi時の打牌行為を立直に変える処理を牌ノードごとに記入
+                    const children = self.controller.tehai.children
+                    for(let child of children){
+                        if(child.name === "Tsumo Node Temp"){
+                            for(let c of child.children){
+                                if(hai.includes(c.name) === false)  c.color = new cc.Color(118,118,118,255)
+                                else{
+                                    //立直可能牌イベント等記入
+                                    c.on(cc.Node.EventType.TOUCH_END, () => {
+                                        if(self.preRichi === false) return
+                                        const result = self.controller.getProtocol().emit("richi", {"protocol": "richi", "hai": Number(c.name)})
+                                        if(result === null) return
+                                        result.then((bool) => {
+                                            if(bool){
+                                                self.controller.tenbou.active = true
+                                                const lb = self.controller.doraNode.getChildByName("Richi num Label").getComponent(cc.Label)
+                                                lb.string = (Number(lb.string) + 1).toString()
+
+                                                //牌を捨てて河に横向きで設置
+                                                self.clearTimer()
+                                                const s_n = self.getHaiTempNum(Number(c.name))
+                                                const s_temp = cc.instantiate(self.controller.getPrefabs().HAI_TEMP[s_n])
+                                                s_temp.rotation = 90
+                                                self.controller.sutehai.addChild(s_temp)
+                                                self.dahai_cache["kaze"] = self.kaze
+                                                self.dahai_cache["uuid"] = s_temp.uuid
+                                                self.dahai_cache["anim"] = cc.repeatForever(cc.sequence(cc.fadeIn(0.5), cc.fadeOut(0.5)))
+                                                self.isTsumo = false
+
+                                                self.updateTehai(self.tehai)
+                                            }else{
+                                                //err?
+                                            }
+                                        })
+                                    })
+                                }
+                            }
+                            continue
+                        }
+                        if(hai.includes(child.name) === false)  child.color = new cc.Color(118,118,118,255)
+                        else{
+                            child.on(cc.Node.EventType.TOUCH_END, () => {
+                                if(self.preRichi === false) return
+                                const result = self.controller.getProtocol().emit("richi", {"protocol": "richi", "hai": Number(child.name)})
+                                if(result === null) return
+                                result.then((bool) => {
+                                    if(bool){
+                                        self.controller.tenbou.active = true
+                                        const lb = self.controller.doraNode.getChildByName("Richi num Label").getComponent(cc.Label)
+                                        lb.string = (Number(lb.string) + 1).toString()
+
+                                        //牌を捨てて河に横向きで設置
+                                        self.clearTimer()
+                                        if(self.isTsumo){
+                                            self.tehai.push(self.tsumohai_cache)
+                                            self.isTsumo = false
+                                        }
+                                        self.tehai.splice(self.tehai.indexOf(Number(child.name)), 1)
+                                        self.updateTehai(self.tehai)
+
+                                        const s_n = self.getHaiTempNum(Number(child.name))
+                                        const s_temp = cc.instantiate(self.controller.getPrefabs().HAI_TEMP[s_n])
+                                        s_temp.rotation = 90
+                                        self.controller.sutehai.addChild(s_temp)
+                                        self.dahai_cache["kaze"] = self.kaze
+                                        self.dahai_cache["uuid"] = s_temp.uuid
+                                        self.dahai_cache["anim"] = cc.repeatForever(cc.sequence(cc.fadeIn(0.5), cc.fadeOut(0.5)))
+                                    }else{
+                                        //err?
+                                    }
+                                })
+                            })
+                        }
+                    }
+                }, this)
             }
         }
     }
@@ -919,6 +1018,22 @@ export class Game4 implements Game {
         setTimeout(() => {this.controller.node.addChild(result)}, 2100)
     }
 
+    public onRichi(richiHai: number, kaze: kaze_number): void {
+        const k = this.getCha(kaze)
+        if(k === "kami"){
+            this.controller.kamiTenbou.active = true
+        }else if(k === "simo"){
+            this.controller.simoTenbou.active = true
+        }else if(k === "toi"){
+            this.controller.toiTenbou.active = true
+        }
+        const lb = this.controller.doraNode.getChildByName("Richi num Label").getComponent(cc.Label)
+        lb.string = (Number(lb.string) + 1).toString()
+
+        //todo 画像表示
+        this.onDahai(richiHai, kaze, true)
+    }
+
     public onResetTestFunc(): void{
         this.controller.node.getChildByName("Test Button").active = true
         const self = this
@@ -958,6 +1073,7 @@ export class Game4 implements Game {
         const self = this
         const hai = _hai
         temp.on(cc.Node.EventType.TOUCH_END, () => {
+            if(self.preRichi) return
             const result = self.controller.getProtocol().emit("dahai", {"protocol": "dahai", "hai": hai})
             if(result === null) return
             result.then((bool) => {
@@ -988,6 +1104,8 @@ export class Game4 implements Game {
             this.controller.timeLabel.string = ""
             const tp = this.controller.tehai.getChildByName("Tsumo Node Temp")
             this.controller.tehai.removeChild(tp)
+
+            this.updateTehai(this.tehai)
         }
     }
 
@@ -997,6 +1115,7 @@ export class Game4 implements Game {
         this.controller.node.getChildByName("Pon Button").active = false
         this.controller.node.getChildByName("Kan Button").active = false
         this.controller.node.getChildByName("Hora Button").active = false
+        this.controller.node.getChildByName("Richi Button").active = false
         this.controller.horaBtnLabel.string = ""
     }
 
@@ -1041,12 +1160,14 @@ export class Game4 implements Game {
     private updateTehai(hai: number[]): void{
         let new_hai = this.haiSort(hai)
         this.clearTehai()
+        this.preRichi = false
         for(var i = 0; i <= new_hai.length - 1; i++){
             const n = this.getHaiTempNum(new_hai[i])
             const temp = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
             const self = this
             const hai = new_hai[i]
             temp.on(cc.Node.EventType.TOUCH_END, () => {
+                if(self.preRichi) return
                 const result = self.controller.getProtocol().emit("dahai", {"protocol": "dahai", "hai": hai})
                 if(result === null) return
                 result.then((bool) => {

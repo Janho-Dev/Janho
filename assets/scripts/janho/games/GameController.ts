@@ -67,6 +67,7 @@ export class GameController extends cc.Component {
     @property(cc.Button) kanButton: cc.Button = null
     @property(cc.Button) horaButton: cc.Button = null
     @property(cc.Label)  horaBtnLabel: cc.Label = null
+    @property(cc.Button) richiButton: cc.Button = null
 
     @property(cc.Button) testButton: cc.Button = null
 
@@ -81,6 +82,11 @@ export class GameController extends cc.Component {
     @property(cc.Node) kamiLight: cc.Node = null
     @property(cc.Node) toiLight: cc.Node = null
     @property(cc.Node) simoLight: cc.Node = null
+
+    @property(cc.Node) tenbou: cc.Node = null
+    @property(cc.Node) kamiTenbou: cc.Node = null
+    @property(cc.Node) toiTenbou: cc.Node = null
+    @property(cc.Node) simoTenbou: cc.Node = null
 
     @property(cc.Node) logoNode: cc.Node = null
     @property(cc.Node) kamiLogoNode: cc.Node = null

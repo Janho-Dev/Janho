@@ -30,7 +30,7 @@ export interface Game {
     onHaipai(kaze: kaze_number, hai: number[], dora: number, names: {[key in kaze_number]: string}): void
     onTurn(kaze: kaze_number, n: number): void
     onTsumo(hai: number): void
-    onDahai(hai: number, kaze: kaze_number): void
+    onDahai(hai: number, kaze: kaze_number, isRichi: boolean): void
     onTimeout(json: string): void
     onCandidate(json: string): void
     onChi(combi: number[], kaze: kaze_number): void
@@ -39,6 +39,7 @@ export interface Game {
     onAnkan(combi: number[], kaze: kaze_number): void
     onKakan(combi: number[], kaze: kaze_number): void
     onHora(kaze: kaze_number, json: string, json2: string): void
+    onRichi(hai: number, kaze: kaze_number): void
     onResetTestFunc(): void
     onRyukyoku(type: ryukyoku): void
     onRyukyokuByPlayer(kaze: kaze_number, type: ryukyoku): void

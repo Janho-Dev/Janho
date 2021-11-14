@@ -52,8 +52,9 @@ import {Pon} from "./game/Pon"
 import {Ankan} from "./game/Ankan"
 import {Kakan} from "./game/Kakan"
 import {ResetRoom} from "./room/ResetRoom"
-import { RoomUpdate } from "./room/RoomUpdate"
-import { Trun } from "./game/Turn"
+import {RoomUpdate} from "./room/RoomUpdate"
+import {Trun} from "./game/Turn"
+import {Richi} from "./game/Richi"
 
 export class Protocol {
     private readonly parent: Janho.default
@@ -92,7 +93,8 @@ export class Protocol {
             "pon": new Pon(this.parent),
             "ankan": new Ankan(this.parent),
             "kakan": new Kakan(this.parent),
-            "turn": new Trun(this.parent)
+            "turn": new Trun(this.parent),
+            "richi": new Richi(this.parent)
         }
     }
 
