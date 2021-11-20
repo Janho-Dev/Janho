@@ -19,30 +19,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * 
  * @author Saisana299
- * @link https://github.com/Janho-Dev/Janho-Server
+ * @link https://github.com/Janho-Dev/Janho
  * 
  */
 
  import * as Janho from "../../Janho"
  import {JanhoProtocol} from "../JanhoProtocol"
 
-export class ResetRoom implements JanhoProtocol {
+export class AddAI implements JanhoProtocol {
     private readonly parent: Janho.default
     
     constructor(parent: Janho.default){
         this.parent = parent
     }
 
-    public procReceive(data: string): void{
-        const parsed = JSON.parse(data)
-        const controller = this.parent.getController()
-        //TODO
-        //if(controller.getStatus() === "game"){
-        //    controller.changeNode("room")
-        //}
-        const game = this.parent.getGame()
-        if(game !== null) game.onResetTestFunc()
-    }
+    public procReceive(data: string): void{}
 
     public procEmit(json: {}): void{
         const data = JSON.stringify(json)

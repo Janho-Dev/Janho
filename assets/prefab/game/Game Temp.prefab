@@ -1224,7 +1224,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 120,
+      "width": 0,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -1276,8 +1276,8 @@
     ],
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
-    "_string": "東１局",
-    "_N$string": "東１局",
+    "_string": "",
+    "_N$string": "",
     "_fontSize": 40,
     "_lineHeight": 40,
     "_enableWrapText": true,
@@ -7781,6 +7781,9 @@
     },
     "amariLabel": {
       "__id__": 34
+    },
+    "roundLabel": {
+      "__id__": 31
     },
     "kazeLabel": {
       "__id__": 37

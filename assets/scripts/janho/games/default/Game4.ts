@@ -1094,6 +1094,22 @@ export class Game4 implements Game {
         this.controller.tehai.getChildByName("Tsumo Node Temp").addChild(temp)
     }
 
+    public onInfo(bakaze: number, kyoku: number, homba: number, richi: number): void{
+        let b = "東"
+        if(bakaze === 1) b = "南"
+        else if(bakaze === 2) b = "西"
+        else if(bakaze === 3) b = "北"
+
+        let k = "１"
+        if(kyoku === 2) k = "２"
+        else if(kyoku === 3) k = "３"
+        else if(kyoku === 4) k = "４"
+
+        this.controller.roundLabel.string = b+k+"局"
+        this.controller.doraNode.getChildByName("Richi num Label").getComponent(cc.Label).string = richi.toString()
+        this.controller.doraNode.getChildByName("Honba num Label").getComponent(cc.Label).string = homba.toString()
+    }
+
     private clearTimer(): void{
         if(this.timer !== null){
             this.clearButton()

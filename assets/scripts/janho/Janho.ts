@@ -35,7 +35,7 @@ const {ccclass, property} = cc._decorator
 
 @ccclass
 export default class Janho extends cc.Component {
-    private readonly VERSION = "1.0.6"
+    private readonly VERSION = "ALPHA-1.0.7"
     
     private controller: Controller
     private socket: Socket
@@ -62,6 +62,8 @@ export default class Janho extends cc.Component {
         this.controller = new Controller(this, this.MAIN_NODE, this.prefabs)
         this.socket = new Socket(this)
         this.network = new Protocol(this)
+
+        console.log(`Loaded Janho ver ${this.VERSION}`)
 
         const self = this
         this.MAIN_NODE.on(cc.Node.EventType.TOUCH_START, function (event: any) { 

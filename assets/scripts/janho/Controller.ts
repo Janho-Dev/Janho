@@ -130,6 +130,9 @@ export class Controller {
                 roomC.isReady = false
             }
         }, this)
+        room.getChildByName("AddAI Button").on(cc.Node.EventType.TOUCH_END, () => {
+            self.parent.getProtocol().emit("addAI", {"protocol": "addAI"}, false)
+        }, this)
         roomC.setParent(this.parent)
         this.status = "room"
         this.node.addChild(room)

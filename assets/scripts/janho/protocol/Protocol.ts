@@ -51,10 +51,12 @@ import {Chi} from "./game/Chi"
 import {Pon} from "./game/Pon"
 import {Ankan} from "./game/Ankan"
 import {Kakan} from "./game/Kakan"
-import {ResetRoom} from "./room/ResetRoom"
+import {EndRoom} from "./room/EndRoom"
 import {RoomUpdate} from "./room/RoomUpdate"
 import {Trun} from "./game/Turn"
 import {Richi} from "./game/Richi"
+import {AddAI} from "./room/AddAI"
+import {Info} from "./game/Info"
 
 export class Protocol {
     private readonly parent: Janho.default
@@ -75,8 +77,9 @@ export class Protocol {
             "readyRoom": new ReadyRoom(this.parent),
             "quitRoom": new QuitRoom(this.parent),
             "startRoom": new StartRoom(this.parent),
-            "resetRoom": new ResetRoom(this.parent),
+            "endRoom": new EndRoom(this.parent),
             "roomUpdate": new RoomUpdate(this.parent),
+            "addAI": new AddAI(this.parent),
 
             "kaikyoku": new Kaikyoku(this.parent),
             "haipai": new Haipai(this.parent),
@@ -94,7 +97,8 @@ export class Protocol {
             "ankan": new Ankan(this.parent),
             "kakan": new Kakan(this.parent),
             "turn": new Trun(this.parent),
-            "richi": new Richi(this.parent)
+            "richi": new Richi(this.parent),
+            "info": new Info(this.parent)
         }
     }
 

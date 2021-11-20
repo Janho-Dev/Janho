@@ -56,6 +56,7 @@ export class GameController extends cc.Component {
 
     @property(cc.Label) timeLabel: cc.Label = null
     @property(cc.Label) amariLabel: cc.Label = null
+    @property(cc.Label) roundLabel: cc.Label = null
     @property(cc.Label) kazeLabel: cc.Label = null
     @property(cc.Label) kamiKazeLabel: cc.Label = null
     @property(cc.Label) simoKazeLabel: cc.Label = null
