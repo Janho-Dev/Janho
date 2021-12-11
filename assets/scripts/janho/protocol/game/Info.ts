@@ -40,7 +40,8 @@ export class Info implements JanhoProtocol {
                 if("bakaze" in parsed && "kyoku" in parsed && "homba" in parsed && "richi" in parsed && "point" in parsed){
                     const game = this.parent.getGame()
                     if(game !== null){
-                        game.onInfo(parsed["bakaze"], parsed["kyoku"], parsed["homba"], parsed["richi"], parsed["point"])
+                        const point = [parsed["point"]["0"], parsed["point"]["1"], parsed["point"]["2"], parsed["point"]["3"]]
+                        game.onInfo(parsed["bakaze"], parsed["kyoku"], parsed["homba"], parsed["richi"], point)
                     }
                 }
             }

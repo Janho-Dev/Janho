@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "ron2",
+    "_name": "haneman",
     "_objFlags": 0,
     "_parent": null,
     "_children": [],
@@ -36,8 +36,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 245,
-      "height": 100
+      "width": 443,
+      "height": 203
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -89,7 +89,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "ae81094c-1979-4f10-9f3e-e463ed3f04cd"
+      "__uuid__": "e69ff53f-982b-4190-bd1e-c85f654c5408"
     },
     "_type": 0,
     "_sizeMode": 1,

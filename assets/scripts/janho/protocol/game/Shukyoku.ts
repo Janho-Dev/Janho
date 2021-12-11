@@ -33,7 +33,10 @@ export class Shukyoku implements JanhoProtocol {
         this.parent = parent
     }
 
-    public procReceive(data: string): void{}
+    public procReceive(data: string): void{
+        const game = this.parent.getGame()
+        if(game !== null) game.onResetTestFunc()
+    }
 
     public procEmit(json: {}): void{
         const data = JSON.stringify(json)

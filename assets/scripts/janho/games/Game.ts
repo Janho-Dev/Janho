@@ -45,4 +45,5 @@ export interface Game {
     onRyukyokuByPlayer(kaze: kaze_number, type: ryukyoku): void
     onKantsumo(hai: number): void
     onInfo(bakaze: number, kyoku: number, homba: number, richi: number, point: number[]): void
+    onEnd(): void
 }

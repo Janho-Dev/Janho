@@ -55,18 +55,22 @@ export class RoomController extends cc.Component {
             if(parsed["data"]["1"]["name"] !== null){
                 this.p1_Label.string = parsed["data"]["1"]["name"]
                 if(parsed["data"]["1"]["status"] === "ready") this.p1r_Label.string = "準備完了"
+                else this.p1r_Label.string = ""
             }
             if(parsed["data"]["2"]["name"] !== null){
                 this.p2_Label.string = parsed["data"]["2"]["name"]
                 if(parsed["data"]["2"]["status"] === "ready") this.p2r_Label.string = "準備完了"
+                else this.p2r_Label.string = ""
             }
             if(parsed["data"]["3"]["name"] !== null){
                 this.p3_Label.string = parsed["data"]["3"]["name"]
                 if(parsed["data"]["3"]["status"] === "ready") this.p3r_Label.string = "準備完了"
+                else this.p3r_Label.string = ""
             }
             if(parsed["data"]["4"]["name"] !== null){
                 this.p4_Label.string = parsed["data"]["4"]["name"]
                 if(parsed["data"]["4"]["status"] === "ready") this.p4r_Label.string = "準備完了"
+                else this.p4r_Label.string = ""
             }
         }
     }

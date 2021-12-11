@@ -114,7 +114,11 @@ export class Protocol {
                 if(this.isWait && this.result === null){
                     if("result" in parsed){
                         if(typeof parsed["result"] === "boolean"){
-                            this.result = parsed["result"]
+                            if("isCached" in parsed){
+                                this.result = false
+                            }else{
+                                this.result = parsed["result"]
+                            }
                         }else{
                             this.result = false
                         }

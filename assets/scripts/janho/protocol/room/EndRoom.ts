@@ -36,12 +36,8 @@ export class EndRoom implements JanhoProtocol {
     public procReceive(data: string): void{
         const parsed = JSON.parse(data)
         const controller = this.parent.getController()
-        //TODO
-        //if(controller.getStatus() === "game"){
-        //    controller.changeNode("room")
-        //}
         const game = this.parent.getGame()
-        if(game !== null) game.onResetTestFunc()
+        if(game !== null) game.onEnd()
     }
 
     public procEmit(json: {}): void{

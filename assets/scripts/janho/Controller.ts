@@ -59,6 +59,7 @@ export class Controller {
         this.node.removeAllChildren()
         const title = cc.instantiate(this.prefabs.TITLE_TEMP)
         const self = this
+        title.getChildByName("Version Label").getComponent(cc.Label).string = this.parent.VERSION
         title.getChildByName("Play Button").on(cc.Node.EventType.TOUCH_END, () => {
             if(!(self.parent.isConnected)){
                 const err = cc.instantiate(self.prefabs.TITLE_ERROR)
@@ -90,7 +91,17 @@ export class Controller {
             const register = self.parent.getProtocol().emit("register", {"protocol": "register", "name": userId})
             if(register === null) return
             register.then((bool) => {
-                if(!bool) return
+                if(!bool){
+                    const err = cc.instantiate(self.prefabs.TITLE_ERROR)
+                    const old = home.getChildByName("Title Error Temp")
+                    if(old !== null){
+                        home.removeChild(old)
+                    }
+                    err.getChildByName("Error Label").getComponent(cc.Label).string = "Error: 名前を登録できませんでした"
+                    err.getChildByName("Error Label").color = new cc.Color(255, 255, 255)
+                    home.addChild(err)
+                    return
+                }
                 else {
                     const joinRoom = self.parent.getProtocol().emit("joinRoom", {"protocol": "joinRoom", "roomId": roomId})
                     if(joinRoom === null) return
@@ -101,7 +112,17 @@ export class Controller {
                             const createRoom = self.parent.getProtocol().emit("createRoom", {"protocol": "createRoom", "roomId": roomId})
                             if(createRoom === null) return
                             createRoom.then((bool) => {
-                                if(!bool) return
+                                if(!bool){
+                                    const err = cc.instantiate(self.prefabs.TITLE_ERROR)
+                                    const old = home.getChildByName("Title Error Temp")
+                                    if(old !== null){
+                                        home.removeChild(old)
+                                    }
+                                    err.getChildByName("Error Label").getComponent(cc.Label).string = "Error: 部屋に参加できませんでした"
+                                    err.getChildByName("Error Label").color = new cc.Color(255, 255, 255)
+                                    home.addChild(err)
+                                    return
+                                }
                                 self.changeNode("room")
                             })
                         }
@@ -109,6 +130,10 @@ export class Controller {
                 }
             })
         }, this)
+
+        home.getChildByName("Exit Button").on(cc.Node.EventType.TOUCH_END, () => {
+            location.reload()
+        })
         this.status = "home"
         this.node.addChild(home)
     }

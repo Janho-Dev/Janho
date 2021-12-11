@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "tsumo2",
+    "_name": "chokuritsu",
     "_objFlags": 0,
     "_parent": null,
     "_children": [],
@@ -36,8 +36,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 247,
-      "height": 107
+      "width": 421,
+      "height": 219
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -89,7 +89,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "41d4240b-994f-4b66-8540-5e72b5860d3e"
+      "__uuid__": "275f4d9c-0ddd-4def-b472-2833fa6b9776"
     },
     "_type": 0,
     "_sizeMode": 1,

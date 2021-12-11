@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "pon",
+    "_name": "sanbaiman",
     "_objFlags": 0,
     "_parent": null,
     "_children": [],
@@ -36,8 +36,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 364,
-      "height": 194
+      "width": 469,
+      "height": 169
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -89,7 +89,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "9b4b42d5-55a0-431b-b29c-8c411fa6d075"
+      "__uuid__": "130c5a9d-8c19-40df-a170-0fc84d152cc5"
     },
     "_type": 0,
     "_sizeMode": 1,

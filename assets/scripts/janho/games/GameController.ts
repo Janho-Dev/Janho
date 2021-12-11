@@ -89,6 +89,11 @@ export class GameController extends cc.Component {
     @property(cc.Node) toiTenbou: cc.Node = null
     @property(cc.Node) simoTenbou: cc.Node = null
 
+    @property(cc.Label) tensu: cc.Label = null
+    @property(cc.Label) kamiTensu: cc.Label = null
+    @property(cc.Label) toiTensu: cc.Label = null
+    @property(cc.Label) simoTensu: cc.Label = null
+
     @property(cc.Node) logoNode: cc.Node = null
     @property(cc.Node) kamiLogoNode: cc.Node = null
     @property(cc.Node) simoLogoNode: cc.Node = null
@@ -96,16 +101,18 @@ export class GameController extends cc.Component {
 
     @property(cc.Prefab) chiLogo: cc.Prefab = null
     @property(cc.Prefab) kanLogo: cc.Prefab = null
-    @property(cc.Prefab) peLogo: cc.Prefab = null
     @property(cc.Prefab) ponLogo: cc.Prefab = null
     @property(cc.Prefab) ronLogo: cc.Prefab = null
-    @property(cc.Prefab) ron2Logo: cc.Prefab = null
     @property(cc.Prefab) tsumoLogo: cc.Prefab = null
-    @property(cc.Prefab) tsumo2Logo: cc.Prefab = null
+    @property(cc.Prefab) richiLogo: cc.Prefab = null
+    @property(cc.Prefab) chokuritsuLogo: cc.Prefab = null
 
     @property(cc.Node) doraNode: cc.Node = null
 
     @property(cc.Prefab) ryukyokuNode: cc.Prefab = null
+
+    @property(cc.Prefab) chiNode: cc.Prefab = null
+    @property(cc.Prefab) chiCombiNode: cc.Prefab = null
 
     @property
     game: Game = null
