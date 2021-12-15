@@ -69,6 +69,7 @@ export class GameController extends cc.Component {
     @property(cc.Button) horaButton: cc.Button = null
     @property(cc.Label)  horaBtnLabel: cc.Label = null
     @property(cc.Button) richiButton: cc.Button = null
+    @property(cc.Button) ryukyokuButton: cc.Button = null
 
     @property(cc.Button) testButton: cc.Button = null
 

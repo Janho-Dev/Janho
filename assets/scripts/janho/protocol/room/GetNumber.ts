@@ -23,10 +23,10 @@
  * 
  */
 
-import * as Janho from "../../Janho"
-import {JanhoProtocol} from "../JanhoProtocol"
+ import * as Janho from "../../Janho"
+ import {JanhoProtocol} from "../JanhoProtocol"
 
-export class Ryukyoku implements JanhoProtocol {
+export class GetNumber implements JanhoProtocol {
     private readonly parent: Janho.default
     
     constructor(parent: Janho.default){
@@ -34,21 +34,12 @@ export class Ryukyoku implements JanhoProtocol {
     }
 
     public procReceive(data: string): void{
-        const parsed = JSON.parse(data)
-        if("protocol" in parsed){
-            if(parsed["protocol"] === "ryukyoku"){
-                if("kaze" in parsed && "type" in parsed){
-                    if(typeof parsed["kaze"] === "number"){
-                        if(parsed["kaze"] === 0 || parsed["kaze"] === 1 || parsed["kaze"] === 2 || parsed["kaze"] === 3){
-                            const game = this.parent.getGame()
-                            if(parsed["type"] === "三家和") return
-                            if(game !== null) game.onRyukyokuByPlayer(parsed["kaze"], parsed["type"])
-                        }
-                    }else if(parsed["kaze"] === null){
-                        const game = this.parent.getGame()
-                        if(parsed["type"] === "三家和") return
-                        if(game !== null) game.onRyukyoku(parsed["type"])
-                    }
+        const ru = this.parent.getRoomController()
+        if(ru !== null){
+            const parsed = JSON.parse(data)
+            if("number" in parsed){
+                if(typeof parsed["number"] === "number"){
+                    ru.setColor(parsed["number"])
                 }
             }
         }

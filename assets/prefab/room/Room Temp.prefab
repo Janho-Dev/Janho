@@ -245,7 +245,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 400,
-      "height": 135.6
+      "height": 75.6
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -353,7 +353,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 400,
-      "height": 135.6
+      "height": 75.6
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -461,7 +461,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 400,
-      "height": 135.6
+      "height": 75.6
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -569,7 +569,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 400,
-      "height": 135.6
+      "height": 75.6
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1112,7 +1112,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 300,
+      "width": 220,
       "height": 60
     },
     "_anchorPoint": {
@@ -1183,7 +1183,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 300,
+      "width": 220,
       "height": 60
     },
     "_anchorPoint": {
@@ -1299,8 +1299,8 @@
     ],
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
-    "_string": "準備切り替え",
-    "_N$string": "準備切り替え",
+    "_string": "",
+    "_N$string": "",
     "_fontSize": 40,
     "_lineHeight": 40,
     "_enableWrapText": false,
@@ -1959,6 +1959,9 @@
     },
     "p4r_Label": {
       "__id__": 27
+    },
+    "btn_Label": {
+      "__id__": 32
     },
     "_id": ""
   },

@@ -24,13 +24,13 @@
  */
 
 /**
- * TODO
- * ・チーの牌の向き(並び替えをする)
- * ・流局からの点数移動
- * 
- * ・重複部分のリファクタリング
+ * 未実装項目
+ * ・点数移動画面追加
+ * ・倍満、役満などの表示を追加
+ * ・SE追加
+ * ・リザルト画面のデザイン
+ * ・牌を見せるモーション
  */
-
 import {kaze_number, ryukyoku} from "../../utils/Types";
 import {Game} from "../Game"
 import {GameController} from "../GameController";
@@ -754,6 +754,15 @@ export class Game4 implements Game {
                                         if(result === null) return
                                         result.then((bool) => {
                                             if(bool){
+                                                self.controller.logoNode.opacity = 0
+                                                const logo = cc.instantiate(self.getRichiLogo())
+                                                self.controller.logoNode.addChild(logo)
+                                                self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
+                                                const clear = () => {
+                                                    self.controller.logoNode.removeAllChildren()
+                                                }
+                                                setTimeout(clear, 2000)
+                                                
                                                 self.controller.tenbou.active = true
                                                 const lb = self.controller.doraNode.getChildByName("Richi num Label").getComponent(cc.Label)
                                                 lb.string = (Number(lb.string) + 1).toString()
@@ -817,6 +826,24 @@ export class Game4 implements Game {
                 }, this)
             }
         }
+        if("kyushu" in parsed){
+            this.controller.node.getChildByName("Ryukyoku Button").active = true
+            const self = this
+            this.controller.node.getChildByName("Ryukyoku Button").once(cc.Node.EventType.TOUCH_END, () => {
+                const old_id = self.timer_id
+                self.clearButton()
+                self.clearSutehai()
+                const result = self.controller.getProtocol().emit("ryukyoku", {"protocol": "ryukyoku"})
+                if(result === null) return
+                result.then((bool) => {
+                    if(bool){
+                        if(old_id === self.timer_id) self.clearTimer()
+                    }else{
+                        //err?
+                    }
+                })
+            })
+        }
     }
 
     public onChi(combi: number[], kaze: kaze_number): void {
@@ -872,6 +899,13 @@ export class Game4 implements Game {
                 this.controller.logoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+
+            for(let h of combi){
+                const i = Math.floor(h / 1) % 10
+                if(i !== 0) continue
+                this.tehai.splice(this.tehai.indexOf(h), 1)
+            }
+            this.updateTehai(this.tehai)
         }
 
         this.furo[kaze].push(this.reChi(combi))
@@ -931,6 +965,13 @@ export class Game4 implements Game {
                 this.controller.logoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+
+            for(let h of combi){
+                const i = Math.floor(h / 1) % 10
+                if(i !== 0) continue
+                this.tehai.splice(this.tehai.indexOf(h), 1)
+            }
+            this.updateTehai(this.tehai)
         }
 
         this.furo[kaze].push(combi)
@@ -990,6 +1031,13 @@ export class Game4 implements Game {
                 this.controller.logoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+
+            for(let h of combi){
+                const i = Math.floor(h / 1) % 10
+                if(i !== 0) continue
+                this.tehai.splice(this.tehai.indexOf(h), 1)
+            }
+            this.updateTehai(this.tehai)
         }
 
         this.furo[kaze].push(combi)
@@ -1066,7 +1114,7 @@ export class Game4 implements Game {
         this.updateNakihai(this.furo[kaze], kaze)
     }
 
-    public onHora(kaze: kaze_number, json: string, json2: string): void {
+    public onHora(kaze: kaze_number, json: string, json2: string, isOne = true, cCallback: Function = null): void {
         const result = cc.instantiate(this.controller.resultTemp)
         const parsed = JSON.parse(json)
         const parsed2 = JSON.parse(json2)
@@ -1134,16 +1182,53 @@ export class Game4 implements Game {
                 }
             }
         }
-        const self = this
-        result.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
-            self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
-        })
+        if(cCallback === null){
+            const self = this
+            result.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
+                self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+            })
+        }else{
+            result.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, cCallback)
+        }
 
+        if(isOne){
+            this.viewHoraLogo(kaze, parsed["hora"])
+            setTimeout(() => {this.controller.node.addChild(result)}, 2100)
+        }else{
+            this.controller.node.addChild(result)
+        }
+    }
+
+    public onManyHora(kazes: kaze_number[], json: string, json2: string): void {
+        const parsed = JSON.parse(json)
+        const parsed2 = JSON.parse(json2)
+        for(let i = 0; i < kazes.length; i++){
+            if("hora" in parsed[i])
+                this.viewHoraLogo(kazes[i], parsed[i]["hora"])
+        }
+        //トリロンは流局
+        setTimeout(() => {
+            if(kazes.length >= 3){
+                console.log("doit")
+                this.onRyukyoku("三家和")
+                return
+            }
+            const self = this
+            this.onHora(kazes[0], JSON.stringify(parsed[0]), JSON.stringify(parsed2[0]), false, () => {
+                self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+                setTimeout(() => {
+                    self.onHora(kazes[1], JSON.stringify(parsed[1]), JSON.stringify(parsed2[1]), false)
+                }, 500)
+            })
+        }, 2100)
+    }
+
+    private viewHoraLogo(kaze: kaze_number, hora: string){
         const k = this.getCha(kaze)
         if(k === "kami"){
             this.controller.kamiLogoNode.opacity = 0
             let logo: cc.Node
-            if(parsed["hora"] === "ron"){
+            if(hora === "ron"){
                 logo = cc.instantiate(this.controller.ronLogo)
             }else{
                 logo = cc.instantiate(this.controller.tsumoLogo)
@@ -1157,7 +1242,7 @@ export class Game4 implements Game {
         }else if(k === "simo"){
             this.controller.simoLogoNode.opacity = 0
             let logo: cc.Node
-            if(parsed["hora"] === "ron"){
+            if(hora === "ron"){
                 logo = cc.instantiate(this.controller.ronLogo)
             }else{
                 logo = cc.instantiate(this.controller.tsumoLogo)
@@ -1171,7 +1256,7 @@ export class Game4 implements Game {
         }else if(k === "toi"){
             this.controller.toiLogoNode.opacity = 0
             let logo: cc.Node
-            if(parsed["hora"] === "ron"){
+            if(hora === "ron"){
                 logo = cc.instantiate(this.controller.ronLogo)
             }else{
                 logo = cc.instantiate(this.controller.tsumoLogo)
@@ -1185,7 +1270,7 @@ export class Game4 implements Game {
         }else{
             this.controller.logoNode.opacity = 0
             let logo: cc.Node
-            if(parsed["hora"] === "ron"){
+            if(hora === "ron"){
                 logo = cc.instantiate(this.controller.ronLogo)
             }else{
                 logo = cc.instantiate(this.controller.tsumoLogo)
@@ -1197,8 +1282,6 @@ export class Game4 implements Game {
             }
             setTimeout(clear, 2000)
         }
-
-        setTimeout(() => {this.controller.node.addChild(result)}, 2100)
     }
 
     public onRichi(richiHai: number, kaze: kaze_number): void {
@@ -1213,7 +1296,34 @@ export class Game4 implements Game {
         const lb = this.controller.doraNode.getChildByName("Richi num Label").getComponent(cc.Label)
         lb.string = (Number(lb.string) + 1).toString()
 
-        //todo 画像表示
+        if(k === "kami"){
+            this.controller.kamiLogoNode.opacity = 0
+            const logo = cc.instantiate(this.getRichiLogo())
+            this.controller.kamiLogoNode.addChild(logo)
+            this.controller.kamiLogoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
+            const clear = () => {
+                this.controller.kamiLogoNode.removeAllChildren()
+            }
+            setTimeout(clear, 2000)
+        }else if(k === "simo"){
+            this.controller.simoLogoNode.opacity = 0
+            const logo = cc.instantiate(this.getRichiLogo())
+            this.controller.simoLogoNode.addChild(logo)
+            this.controller.simoLogoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
+            const clear = () => {
+                this.controller.simoLogoNode.removeAllChildren()
+            }
+            setTimeout(clear, 2000)
+        }else if(k === "toi"){
+            this.controller.toiLogoNode.opacity = 0
+            const logo = cc.instantiate(this.getRichiLogo())
+            this.controller.toiLogoNode.addChild(logo)
+            this.controller.toiLogoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
+            const clear = () => {
+                this.controller.toiLogoNode.removeAllChildren()
+            }
+            setTimeout(clear, 2000)
+        }
         this.onDahai(richiHai, kaze, true)
     }
 
@@ -1342,6 +1452,7 @@ export class Game4 implements Game {
         this.controller.node.getChildByName("Kan Button").active = false
         this.controller.node.getChildByName("Hora Button").active = false
         this.controller.node.getChildByName("Richi Button").active = false
+        this.controller.node.getChildByName("Ryukyoku Button").active = false
         this.controller.horaBtnLabel.string = ""
     }
 
@@ -1541,5 +1652,12 @@ export class Game4 implements Game {
             410: 30, 420: 31, 430: 32, 440: 33, 450: 34, 460: 35, 470: 36, 500: 37
         }
         return list[c]
+    }
+
+    private getRichiLogo(): cc.Prefab{
+        let prefab = this.controller.richiLogo
+        const num = Math.floor(Math.random() * 600)
+        if(num === 77) prefab = this.controller.chokuritsuLogo
+        return prefab
     }
 }

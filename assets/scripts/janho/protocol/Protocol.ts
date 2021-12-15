@@ -57,6 +57,8 @@ import {Trun} from "./game/Turn"
 import {Richi} from "./game/Richi"
 import {AddAI} from "./room/AddAI"
 import {Info} from "./game/Info"
+import {ManyHora} from "./game/ManyHora"
+import {GetNumber} from "./room/GetNumber"
 
 export class Protocol {
     private readonly parent: Janho.default
@@ -80,6 +82,7 @@ export class Protocol {
             "endRoom": new EndRoom(this.parent),
             "roomUpdate": new RoomUpdate(this.parent),
             "addAI": new AddAI(this.parent),
+            "getNumber": new GetNumber(this.parent),
 
             "kaikyoku": new Kaikyoku(this.parent),
             "haipai": new Haipai(this.parent),
@@ -98,7 +101,8 @@ export class Protocol {
             "kakan": new Kakan(this.parent),
             "turn": new Trun(this.parent),
             "richi": new Richi(this.parent),
-            "info": new Info(this.parent)
+            "info": new Info(this.parent),
+            "manyHora": new ManyHora(this.parent)
         }
     }
 

@@ -39,6 +39,7 @@ export interface Game {
     onAnkan(combi: number[], kaze: kaze_number): void
     onKakan(combi: number[], kaze: kaze_number): void
     onHora(kaze: kaze_number, json: string, json2: string): void
+    onManyHora(kazes: kaze_number[], json: string, json2: string): void
     onRichi(hai: number, kaze: kaze_number): void
     onResetTestFunc(): void
     onRyukyoku(type: ryukyoku): void

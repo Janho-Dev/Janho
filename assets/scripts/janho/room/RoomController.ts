@@ -41,12 +41,29 @@ export class RoomController extends cc.Component {
     @property(cc.Label) p3r_Label: cc.Label = null
     @property(cc.Label) p4r_Label: cc.Label = null
 
+    @property(cc.Label) btn_Label: cc.Label = null
+
     public start(){
         this.parent.setRoomController(this)
+        this.parent.getProtocol().emit("getNumber", {"protocol": "getNumber"}, false)
         this.parent.getProtocol().emit("roomUpdate", {"protocol": "roomUpdate"}, false)
     }
     public setParent(parent: Janho){
         this.parent = parent
+    }
+    public setLabel(str: "準備" | "準備解除"){
+        this.btn_Label.string = str
+    }
+    public setColor(n: number){
+        if(n === 1){
+            this.p1_Label.node.color = new cc.Color(223, 207, 31)
+        }else if(n === 2){
+            this.p2_Label.node.color = new cc.Color(223, 207, 31)
+        }else if(n === 3){
+            this.p3_Label.node.color = new cc.Color(223, 207, 31)
+        }else if(n === 4){
+            this.p4_Label.node.color = new cc.Color(223, 207, 31)
+        }
     }
 
     public onRoomUpdate(json: string){
