@@ -115,6 +115,21 @@ export class GameController extends cc.Component {
     @property(cc.Prefab) chiNode: cc.Prefab = null
     @property(cc.Prefab) chiCombiNode: cc.Prefab = null
 
+    @property(cc.Prefab) manganLogo: cc.Prefab = null
+    @property(cc.Prefab) hanemanLogo: cc.Prefab = null
+    @property(cc.Prefab) baimanLogo: cc.Prefab = null
+    @property(cc.Prefab) sanbaimanLogo: cc.Prefab = null
+    @property(cc.Prefab) kazoeLogo: cc.Prefab = null
+    @property(cc.Prefab) yakumanLogo: cc.Prefab = null
+    @property(cc.Prefab) nibaiLogo: cc.Prefab = null
+    @property(cc.Prefab) sanbaiLogo: cc.Prefab = null
+    @property(cc.Prefab) yonbaiLogo: cc.Prefab = null
+    @property(cc.Prefab) gobaiLogo: cc.Prefab = null
+    @property(cc.Prefab) rokubaiLogo: cc.Prefab = null
+    @property(cc.Prefab) nagashiLogo: cc.Prefab = null
+
+    @property(cc.Prefab) optionNode: cc.Prefab = null
+
     @property
     game: Game = null
 
@@ -137,6 +152,38 @@ export class GameController extends cc.Component {
         this.kamiLight.active = false
         this.simoLight.active = false
         this.toiLight.active = false
+
+        const self = this
+        this.node.getChildByName("Option Button").on(cc.Node.EventType.TOUCH_END, () => {
+            const go = self.game.getOption()
+            self.node.getChildByName("Option Button").active = false
+
+            const option = cc.instantiate(self.optionNode)
+            option.getChildByName("Close").on(cc.Node.EventType.TOUCH_END, () => {
+                self.node.removeChild(self.node.getChildByName("Option Node"))
+                self.node.getChildByName("Option Button").active = true
+            }, this)
+
+            const dt = option.getChildByName("Dahai Toggle")
+            dt.getComponent(cc.Toggle).isChecked = go.auto_dahai
+            dt.on("toggle", () => {
+                self.game.changeOption("auto_dahai", dt.getComponent(cc.Toggle).isChecked)
+            }, this)
+
+            const ht = option.getChildByName("Hora Toggle")
+            ht.getComponent(cc.Toggle).isChecked = go.auto_hora
+            ht.on("toggle", () => {
+                self.game.changeOption("auto_hora", ht.getComponent(cc.Toggle).isChecked)
+            }, this)
+
+            const ft = option.getChildByName("Furo Toggle")
+            ft.getComponent(cc.Toggle).isChecked = go.disable_furo
+            ft.on("toggle", () => {
+                self.game.changeOption("disable_furo", ft.getComponent(cc.Toggle).isChecked)
+            }, this)
+
+            self.node.addChild(option)
+        }, this)
     }
     public getGame(): Game{
         return this.game

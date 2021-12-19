@@ -73,6 +73,9 @@ export class Controller {
             }
             self.changeNode("home")
         }, this)
+        title.getChildByName("GitHub-Mark-64px").on(cc.Node.EventType.TOUCH_END, () => {
+            window.open("https://github.com/Janho-Dev/Janho", "_blank")
+        }, this)
         this.status = "title"
         this.node.addChild(title)
     }

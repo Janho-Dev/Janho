@@ -59,6 +59,7 @@ import {AddAI} from "./room/AddAI"
 import {Info} from "./game/Info"
 import {ManyHora} from "./game/ManyHora"
 import {GetNumber} from "./room/GetNumber"
+import {NagashiMangan} from "./game/NagashiMangan"
 
 export class Protocol {
     private readonly parent: Janho.default
@@ -102,7 +103,8 @@ export class Protocol {
             "turn": new Trun(this.parent),
             "richi": new Richi(this.parent),
             "info": new Info(this.parent),
-            "manyHora": new ManyHora(this.parent)
+            "manyHora": new ManyHora(this.parent),
+            "nagashiMangan": new NagashiMangan(this.parent)
         }
     }
 

@@ -26,11 +26,15 @@
 /**
  * 未実装項目
  * ・点数移動画面追加
- * ・倍満、役満などの表示を追加
  * ・SE追加
  * ・リザルト画面のデザイン
- * ・牌を見せるモーション
+ * ・牌を見せるモーション(打牌等)
+ * ・三家和の時の牌を見せる
+ * 
+ * ・所々にアニメーション追加
+ * ・背景の色変えたり、音量調節機能
  */
+import {Mangan} from "../../utils/Mangan";
 import {kaze_number, ryukyoku} from "../../utils/Types";
 import {Game} from "../Game"
 import {GameController} from "../GameController";
@@ -49,6 +53,8 @@ export class Game4 implements Game {
     private furo: {[key in kaze_number]: number[][]} = {0:[],1:[],2:[],3:[]}
     private dahai_cache: {"kaze": kaze_number, "uuid": string, "anim": cc.ActionInterval} 
     = {"kaze": null, "uuid": null, "anim": null}
+
+    private option = {"auto_dahai": false, "auto_hora": false, "disable_furo": false}
 
     constructor(contoroller: GameController){
         this.controller = contoroller
@@ -174,7 +180,8 @@ export class Game4 implements Game {
         const temp = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
         const self = this
         const hai = _hai
-        temp.on(cc.Node.EventType.TOUCH_END, () => {
+
+        const func: Function = () => {
             if(self.preRichi) return
             const result = self.controller.getProtocol().emit("dahai", {"protocol": "dahai", "hai": hai})
             if(result === null) return
@@ -192,10 +199,18 @@ export class Game4 implements Game {
                     self.updateTehai(self.tehai)
                 }
             })
-        })
+        }
+
+        if(!this.option.auto_dahai){
+            temp.on(cc.Node.EventType.TOUCH_END, func)
+        }
         const t_tmp = cc.instantiate(this.controller.tsumohai)
         this.controller.tehai.addChild(t_tmp)
         this.controller.tehai.getChildByName("Tsumo Node Temp").addChild(temp)
+
+        if(this.option.auto_dahai){
+            setTimeout(() => {func.call(self)}, 1000)
+        }
     }
 
     public onDahai(hai: number, kaze: kaze_number, isRichi: boolean = false): void {
@@ -258,7 +273,8 @@ export class Game4 implements Game {
             if("chi" in parsed || "pon" in parsed || "kan" in parsed || "hora" in parsed){
                 this.controller.node.getChildByName("Skip Button").active = true
                 const self = this
-                this.controller.node.getChildByName("Skip Button").once(cc.Node.EventType.TOUCH_END, () => {
+
+                const func: Function = () => {
                     const old_id = self.timer_id
                     self.clearButton()
                     self.clearSutehai()
@@ -271,7 +287,13 @@ export class Game4 implements Game {
                             //err?
                         }
                     })
-                }, this)
+                }
+
+                if(!this.option.disable_furo){
+                    this.controller.node.getChildByName("Skip Button").once(cc.Node.EventType.TOUCH_END, func, this)
+                }else{
+                    setTimeout(() => {func.call(self)}, 1000)
+                }
             }
         }
         if("chi" in parsed){
@@ -650,7 +672,8 @@ export class Game4 implements Game {
                     this.controller.horaBtnLabel.string = "ツモ"
                     this.controller.node.getChildByName("Hora Button").active = true
                     const self = this
-                    this.controller.node.getChildByName("Hora Button").once(cc.Node.EventType.TOUCH_END, () => {
+
+                    const func: Function = () => {
                         self.clearButton()
                         const hai: number = parsed["hora"]["hai"][0]
                         const result = self.controller.getProtocol().emit("hora", {"protocol": "hora", "hai": hai})
@@ -671,7 +694,13 @@ export class Game4 implements Game {
                                 //err?
                             }  
                         })
-                    }, this)
+                    }
+
+                    if(!this.option.auto_hora){
+                        this.controller.node.getChildByName("Hora Button").once(cc.Node.EventType.TOUCH_END, func, this)
+                    }else{
+                        setTimeout(() => {func.call(self)}, 1000)
+                    }
                 }
             }else{
                 if("hai" in parsed["hora"] && "from" in parsed["hora"]){
@@ -690,7 +719,8 @@ export class Game4 implements Game {
                     this.controller.horaBtnLabel.string = "ロン"
                     this.controller.node.getChildByName("Hora Button").active = true
                     const self = this
-                    this.controller.node.getChildByName("Hora Button").once(cc.Node.EventType.TOUCH_END, () => {
+
+                    const func: Function = () => {
                         self.clearButton()
                         const hai: number = parsed["hora"]["hai"][0]
                         const result = self.controller.getProtocol().emit("hora", {"protocol": "hora", "hai": hai})
@@ -724,7 +754,13 @@ export class Game4 implements Game {
                                 self.clearTimer()
                             }
                         })
-                    }, this)
+                    }
+
+                    if(!this.option.auto_hora){
+                        this.controller.node.getChildByName("Hora Button").once(cc.Node.EventType.TOUCH_END, func, this)
+                    }else{
+                        setTimeout(() => {func.call(self)}, 1000)
+                    }
                 }
             }
         }
@@ -1114,11 +1150,11 @@ export class Game4 implements Game {
         this.updateNakihai(this.furo[kaze], kaze)
     }
 
-    public onHora(kaze: kaze_number, json: string, json2: string, isOne = true, cCallback: Function = null): void {
+    public onHora(kaze: kaze_number, json: string, json2: string, isOne = true, cCallback: Function = null, isNagashi = false): void {
         const result = cc.instantiate(this.controller.resultTemp)
         const parsed = JSON.parse(json)
         const parsed2 = JSON.parse(json2)
-        if("tehai" in parsed2 && "furo" in parsed2 && "horahai" in parsed2 && "dora" in parsed2 && "uradora" in parsed2){
+        if("tehai" in parsed2 && "furo" in parsed2 && "horahai" in parsed2 && "dora" in parsed2 && "uradora" in parsed2 && "name" in parsed2){
             let hai: number[] = parsed2["tehai"]
             const furo: number[][] = parsed2["furo"]
             const dora: number[] = parsed2["dora"]
@@ -1161,15 +1197,71 @@ export class Game4 implements Game {
                     result.getChildByName("Uradorahai Node").addChild(utemp)
                 }
             }
+            result.getChildByName("PName Label").getComponent(cc.Label).string = parsed2["name"]
         }
         if("yakuhai" in parsed && "fu" in parsed && "hansu" in parsed && "yakuman" in parsed && "point" in parsed && "bumpai" in parsed && "hora" in parsed){
             result.getChildByName("Tensu Label").getComponent(cc.Label).string = parsed["point"]
             result.getChildByName("Hansu Label").getComponent(cc.Label).string = parsed["hansu"]
             result.getChildByName("Fusu Label").getComponent(cc.Label).string = parsed["fu"]
+
+            let yakuman = 0
+
             for(let yaku of parsed["yakuhai"]){
                 const lbl = result.getChildByName("Yaku Label").getComponent(cc.Label)
                 lbl.string = lbl.string + yaku["name"] + " " + yaku["hansu"] + "飜, "
+                if(yaku["hansu"] === "*") yakuman++
+                else if(yaku["hansu"] === "**") yakuman = yakuman + 2
             }
+
+            const mangan = Mangan.getString(parsed["fu"], parsed["han"], yakuman)
+            const logoNode1 = result.getChildByName("Logo Node 1")
+            const logoNode2 = result.getChildByName("Logo Node 2")
+            switch(mangan){
+                case "満貫":
+                    logoNode1.addChild(cc.instantiate(this.controller.manganLogo))
+                    break
+                case "跳満":
+                    logoNode1.addChild(cc.instantiate(this.controller.hanemanLogo))
+                    break
+                case "倍満":
+                    logoNode1.addChild(cc.instantiate(this.controller.baimanLogo))
+                    break
+                case "三倍満":
+                    logoNode1.addChild(cc.instantiate(this.controller.sanbaiLogo))
+                    break
+                case "数え役満":
+                    logoNode2.addChild(cc.instantiate(this.controller.kazoeLogo))
+                    logoNode1.addChild(cc.instantiate(this.controller.yakumanLogo))
+                    break
+                case "役満":
+                    logoNode1.addChild(cc.instantiate(this.controller.yakumanLogo))
+                    break
+                case "二倍役満":
+                    logoNode2.addChild(cc.instantiate(this.controller.nibaiLogo))
+                    logoNode1.addChild(cc.instantiate(this.controller.yakumanLogo))
+                    break
+                case "三倍役満":
+                    logoNode2.addChild(cc.instantiate(this.controller.sanbaiLogo))
+                    logoNode1.addChild(cc.instantiate(this.controller.yakumanLogo))
+                    break
+                case "四倍役満":
+                    logoNode2.addChild(cc.instantiate(this.controller.yonbaiLogo))
+                    logoNode1.addChild(cc.instantiate(this.controller.yakumanLogo))
+                    break
+                case "五倍役満":
+                    logoNode2.addChild(cc.instantiate(this.controller.gobaiLogo))
+                    logoNode1.addChild(cc.instantiate(this.controller.yakumanLogo))
+                    break
+                case "六倍役満":
+                    logoNode2.addChild(cc.instantiate(this.controller.rokubaiLogo))
+                    logoNode1.addChild(cc.instantiate(this.controller.yakumanLogo))
+                    break
+            }
+            if(isNagashi){
+                logoNode2.addChild(cc.instantiate(this.controller.nagashiLogo))
+                logoNode1.addChild(cc.instantiate(this.controller.manganLogo))
+            }
+
             let kz = "東"
             if(kaze === 1) kz = "南"
             else if(kaze === 2) kz = "西"
@@ -1177,8 +1269,10 @@ export class Game4 implements Game {
             if("hora" in parsed){
                 if(parsed["hora"] === "ron"){
                     result.getChildByName("Name Label").getComponent(cc.Label).string = `${kz}家 ロン`
-                }else{
+                }else if(parsed["hora"] === "tsumo"){
                     result.getChildByName("Name Label").getComponent(cc.Label).string = `${kz}家 ツモ`
+                }else{
+                    result.getChildByName("Name Label").getComponent(cc.Label).string = `${kz}家`
                 }
             }
         }
@@ -1209,7 +1303,6 @@ export class Game4 implements Game {
         //トリロンは流局
         setTimeout(() => {
             if(kazes.length >= 3){
-                console.log("doit")
                 this.onRyukyoku("三家和")
                 return
             }
@@ -1335,7 +1428,7 @@ export class Game4 implements Game {
         }, this)
     }
 
-    public onRyukyoku(type: ryukyoku){
+    public onRyukyoku(type: ryukyoku, tehais: {[key in kaze_number]: number[]} = null){
         const ryukyoku = cc.instantiate(this.controller.ryukyokuNode)
         ryukyoku.getChildByName("Ryukyoku Label").getComponent(cc.Label).string = type
         const self = this
@@ -1345,7 +1438,7 @@ export class Game4 implements Game {
         this.controller.node.addChild(ryukyoku)
     }
 
-    public onRyukyokuByPlayer(kaze: kaze_number, type: ryukyoku){
+    public onRyukyokuByPlayer(kaze: kaze_number, type: ryukyoku, tehai: number[]){
         //todo
         const ryukyoku = cc.instantiate(this.controller.ryukyokuNode)
         ryukyoku.getChildByName("Ryukyoku Label").getComponent(cc.Label).string = type
@@ -1423,6 +1516,47 @@ export class Game4 implements Game {
         this.controller.node.getChildByName("Test Button").once(cc.Node.EventType.TOUCH_END, () => {
             self.controller.getParent().getController().changeNode("game")
         }, this)
+    }
+
+    public onNagashiMangan(kazes: kaze_number[], json: string, json2: string): void {
+        if(kazes.length >= 3){
+            this.onRyukyoku("荒牌平局")
+            return
+        }
+        const parsed = JSON.parse(json)
+        const parsed2 = JSON.parse(json2)
+        if(kazes.length === 2){
+            setTimeout(() => {
+                const self = this
+                this.onHora(kazes[0], JSON.stringify(parsed[0]), JSON.stringify(parsed2[0]), false, () => {
+                    self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+                    setTimeout(() => {
+                        self.onHora(kazes[1], JSON.stringify(parsed[1]), JSON.stringify(parsed2[1]), false, null, true)
+                    }, 500)
+                }, true)
+            }, 100)
+        }else if(kazes.length === 1){
+            setTimeout(() => {
+                const self = this
+                this.onHora(kazes[0], JSON.stringify(parsed[0]), JSON.stringify(parsed2[0]), false, () => {
+                    self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+                }, true)
+            }, 100)
+        }
+    }
+
+    public changeOption(str: string, bool: boolean): void{
+        if(str === "auto_dahai"){
+            this.option.auto_dahai = bool
+        }else if(str === "auto_hora"){
+            this.option.auto_hora = bool
+        }else if(str === "disable_furo"){
+            this.option.disable_furo = bool
+        }
+    }
+
+    public getOption(): {"auto_dahai": boolean, "auto_hora": boolean, "disable_furo": boolean}{
+        return this.option
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////

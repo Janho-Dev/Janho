@@ -23,8 +23,24 @@
  * 
  */
 
-export type janho_node = "title" | "home" | "room" | "game"
-export type game_mode = "4" | "3" | "event"
-export type kaze_number = 0 | 1 | 2 | 3
-export type ryukyoku = "荒牌平局" | "九種九牌" | "四家立直" | "三家和" | "四風連打" | "四槓散了"
-export type mangan = "無し" | "満貫" | "跳満" | "倍満" | "三倍満" | "数え役満" | "役満" | "二倍役満" | "三倍役満" | "四倍役満" | "五倍役満" | "六倍役満"
+import {mangan} from "./Types";
+
+export class Mangan{
+    static getString(fu: number, han: number, yakuman: number): mangan{
+        let string: mangan = "無し"
+        if(han === 3 && fu >= 70) string = "満貫"
+        if(han === 4 && fu >= 40) string = "満貫"
+        if(han === 6 || han === 7) string = "跳満"
+        if(han >= 8 && han <= 10) string = "倍満"
+        if(han >= 11 && han <= 12) string = "三倍満"
+        if(han >= 13) string = "数え役満"
+
+        if(yakuman === 1) string = "役満"
+        if(yakuman === 2) string = "二倍役満"
+        if(yakuman === 3) string = "三倍役満"
+        if(yakuman === 4) string = "四倍役満"
+        if(yakuman === 5) string = "五倍役満"
+        if(yakuman === 6) string = "六倍役満"
+        return string
+    }
+}

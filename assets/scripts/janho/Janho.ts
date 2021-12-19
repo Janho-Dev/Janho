@@ -35,7 +35,7 @@ const {ccclass, property} = cc._decorator
 
 @ccclass
 export default class Janho extends cc.Component {
-    readonly VERSION = "ver 1.0.1"
+    readonly VERSION = "ver 1.0.2"
     
     private controller: Controller
     private socket: Socket
@@ -54,7 +54,10 @@ export default class Janho extends cc.Component {
     ROOM_CONTROLLER: RoomController = null
 
     @property(cc.Prefab)
-    particle: cc.Prefab = null;
+    particle: cc.Prefab = null
+
+    @property(cc.Prefab)
+    disconnect: cc.Prefab = null
 
     public onLoad(){
         this.isConnected = false
@@ -129,5 +132,13 @@ export default class Janho extends cc.Component {
         self.node.addChild(prefab)
         var pos = prefab.convertToNodeSpaceAR(touchLoc)
         prefab.setPosition(pos)
+    }
+
+    public onDisconnect(): void{
+        const dis = cc.instantiate(this.disconnect)
+        dis.getChildByName("Button").on(cc.Node.EventType.TOUCH_END, () => {
+            location.reload()
+        }, this.node)
+        this.node.addChild(dis)
     }
 }

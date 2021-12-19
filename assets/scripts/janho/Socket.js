@@ -46,6 +46,7 @@ export class Socket{
         })
         this.socket.on("disconnect", function () {
             self.parent.isConnected = false
+            self.parent.onDisconnect()
         })
     }
 

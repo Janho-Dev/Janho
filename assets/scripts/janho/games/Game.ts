@@ -42,9 +42,12 @@ export interface Game {
     onManyHora(kazes: kaze_number[], json: string, json2: string): void
     onRichi(hai: number, kaze: kaze_number): void
     onResetTestFunc(): void
-    onRyukyoku(type: ryukyoku): void
-    onRyukyokuByPlayer(kaze: kaze_number, type: ryukyoku): void
+    onRyukyoku(type: ryukyoku, tehais: {[key in kaze_number]: number[]}): void
+    onRyukyokuByPlayer(kaze: kaze_number, type: ryukyoku, tehai: number[]): void
     onKantsumo(hai: number): void
     onInfo(bakaze: number, kyoku: number, homba: number, richi: number, point: number[]): void
     onEnd(): void
+    onNagashiMangan(kazes: kaze_number[], json: string, json2: string): void
+    changeOption(str: string, bool: boolean): void
+    getOption(): {"auto_dahai": boolean, "auto_hora": boolean, "disable_furo": boolean}
 }

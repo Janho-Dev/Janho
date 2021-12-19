@@ -26,7 +26,7 @@
 import * as Janho from "../../Janho"
 import {JanhoProtocol} from "../JanhoProtocol"
 
-export class Ryukyoku implements JanhoProtocol {
+export class NagashiMangan implements JanhoProtocol {
     private readonly parent: Janho.default
     
     constructor(parent: Janho.default){
@@ -36,23 +36,12 @@ export class Ryukyoku implements JanhoProtocol {
     public procReceive(data: string): void{
         const parsed = JSON.parse(data)
         if("protocol" in parsed){
-            if(parsed["protocol"] === "ryukyoku"){
-                if("kaze" in parsed && "type" in parsed){
-                    if(typeof parsed["kaze"] === "number"){
-                        if(parsed["kaze"] === 0 || parsed["kaze"] === 1 || parsed["kaze"] === 2 || parsed["kaze"] === 3){
-                            const game = this.parent.getGame()
-                            if(parsed["type"] === "三家和") return
-                            if("tehai" in parsed){
-                                if(game !== null) game.onRyukyokuByPlayer(parsed["kaze"], parsed["type"], parsed["tehai"])
-                            }
-                        }
-                    }else if(parsed["kaze"] === null){
-                        const game = this.parent.getGame()
-                        if(parsed["type"] === "三家和") return
-                        if("tehais" in parsed){
-                            if(game !== null) game.onRyukyoku(parsed["type"], parsed["tehais"])
-                        }
-                    }
+            if(parsed["protocol"] === "nagashiMangan"){
+                if("datas" in parsed && "kazes" in parsed && "datas2" in parsed){
+                    const json = JSON.stringify(parsed["datas"])
+                    const json2 = JSON.stringify(parsed["datas2"])
+                    const game = this.parent.getGame()
+                    if(game !== null) game.onNagashiMangan(parsed["kazes"], json, json2)
                 }
             }
         }
