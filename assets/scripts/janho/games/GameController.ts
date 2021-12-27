@@ -35,6 +35,7 @@ const {ccclass, property} = cc._decorator
 export class GameController extends cc.Component {
     private parent: Janho
     private mode: Types.game_mode
+    private back = "green"
     anim = cc.repeatForever(cc.sequence(cc.delayTime(0.5), cc.fadeOut(1.0), cc.delayTime(0.5), cc.fadeIn(1.0)))
 
     @property(cc.Node)
@@ -43,6 +44,10 @@ export class GameController extends cc.Component {
     tsumohai: cc.Prefab = null
     @property(cc.Prefab)
     nakihai_node: cc.Prefab = null
+
+    @property(cc.Node) kamiTehai: cc.Node = null
+    @property(cc.Node) simoTehai: cc.Node = null
+    @property(cc.Node) toiTehai: cc.Node = null
 
     @property(cc.Node) sutehai: cc.Node = null
     @property(cc.Node) kamiSutehai: cc.Node = null
@@ -130,6 +135,14 @@ export class GameController extends cc.Component {
 
     @property(cc.Prefab) optionNode: cc.Prefab = null
 
+    @property(cc.Prefab) yakuLabel: cc.Prefab = null
+
+    @property(cc.Prefab) pointTemp: cc.Prefab = null
+
+    @property(cc.SpriteFrame) greenBack: cc.SpriteFrame = null
+    @property(cc.SpriteFrame) blackBack: cc.SpriteFrame = null
+    @property(cc.SpriteFrame) blueBack: cc.SpriteFrame = null
+
     @property
     game: Game = null
 
@@ -155,13 +168,29 @@ export class GameController extends cc.Component {
 
         const self = this
         this.node.getChildByName("Option Button").on(cc.Node.EventType.TOUCH_END, () => {
+            self.getParent().playSound("click")
             const go = self.game.getOption()
             self.node.getChildByName("Option Button").active = false
 
             const option = cc.instantiate(self.optionNode)
             option.getChildByName("Close").on(cc.Node.EventType.TOUCH_END, () => {
+                self.getParent().playSound("click")
                 self.node.removeChild(self.node.getChildByName("Option Node"))
                 self.node.getChildByName("Option Button").active = true
+            }, this)
+
+            const bc = option.getChildByName("Back Button")
+            bc.on(cc.Node.EventType.TOUCH_END, () => {
+                if(self.back === "green"){
+                    self.back = "blue"
+                    self.node.getChildByName("Background").getComponent(cc.Sprite).spriteFrame = self.blueBack
+                }else if(self.back === "blue"){
+                    self.back = "black"
+                    self.node.getChildByName("Background").getComponent(cc.Sprite).spriteFrame = self.blackBack
+                }else{
+                    self.back = "green"
+                    self.node.getChildByName("Background").getComponent(cc.Sprite).spriteFrame = self.greenBack
+                }
             }, this)
 
             const dt = option.getChildByName("Dahai Toggle")

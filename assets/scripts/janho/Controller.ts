@@ -50,6 +50,7 @@ export class Controller {
         else if(type === "home") this.setHome()
         else if(type === "room") this.setRoom()
         else if(type === "game") this.setGame()
+        this.parent.changeVol(true)
     }
 
     /**
@@ -61,6 +62,7 @@ export class Controller {
         const self = this
         title.getChildByName("Version Label").getComponent(cc.Label).string = this.parent.VERSION
         title.getChildByName("Play Button").on(cc.Node.EventType.TOUCH_END, () => {
+            self.parent.playSound("click")
             if(!(self.parent.isConnected)){
                 const err = cc.instantiate(self.prefabs.TITLE_ERROR)
                 const old = title.getChildByName("Title Error Temp")
@@ -88,6 +90,7 @@ export class Controller {
         const home = cc.instantiate(this.prefabs.HOME_TEMP)
         const self = this
         home.getChildByName("Game4 Button").on(cc.Node.EventType.TOUCH_END, () => {
+            self.parent.playSound("click")
             const userId = home.getChildByName("User EBox").getComponent(cc.EditBox).string
             const roomId = home.getChildByName("Room EBox").getComponent(cc.EditBox).string
             if(userId === "" || roomId === "") return
@@ -151,6 +154,7 @@ export class Controller {
         const roomC: RoomController = room.getComponent("RoomController")
         roomC.setLabel("準備")
         room.getChildByName("Ready Button").on(cc.Node.EventType.TOUCH_END, () => {
+            self.parent.playSound("click")
             if(!roomC.isReady){
                 self.parent.getProtocol().emit("readyRoom", {"protocol": "readyRoom", "bool": true}, false)
                 roomC.isReady = true
@@ -162,6 +166,7 @@ export class Controller {
             }
         }, this)
         room.getChildByName("AddAI Button").on(cc.Node.EventType.TOUCH_END, () => {
+            self.parent.playSound("click")
             self.parent.getProtocol().emit("addAI", {"protocol": "addAI"}, false)
         }, this)
         roomC.setParent(this.parent)

@@ -41,7 +41,7 @@ export class NagashiMangan implements JanhoProtocol {
                     const json = JSON.stringify(parsed["datas"])
                     const json2 = JSON.stringify(parsed["datas2"])
                     const game = this.parent.getGame()
-                    if(game !== null) game.onNagashiMangan(parsed["kazes"], json, json2)
+                    if(game !== null) game.onNagashiMangan(parsed["kazes"], json, json2, parsed["point"])
                 }
             }
         }

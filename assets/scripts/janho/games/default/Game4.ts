@@ -23,17 +23,7 @@
  * 
  */
 
-/**
- * 未実装項目
- * ・点数移動画面追加
- * ・SE追加
- * ・リザルト画面のデザイン
- * ・牌を見せるモーション(打牌等)
- * ・三家和の時の牌を見せる
- * 
- * ・所々にアニメーション追加
- * ・背景の色変えたり、音量調節機能
- */
+//ポンの牌向き修正できてない
 import {Mangan} from "../../utils/Mangan";
 import {kaze_number, ryukyoku} from "../../utils/Types";
 import {Game} from "../Game"
@@ -71,7 +61,7 @@ export class Game4 implements Game {
         this.timer = setInterval(() => 
         {
             this.controller.timeLabel.string = `${this.time - 1}`
-            this.time = this.time - 1;
+            this.time = this.time - 1
             if(this.time === 0){
                 this.clearButton()
                 this.clearSutehai()
@@ -196,6 +186,11 @@ export class Game4 implements Game {
                     self.dahai_cache["anim"] = cc.repeatForever(cc.sequence(cc.fadeIn(0.5), cc.fadeOut(0.5)))
                     self.isTsumo = false
 
+                    const a = Math.floor(Math.random() * 3)
+                    if(a === 0) self.controller.getParent().playSound("dahai1")
+                    else if(a === 1) self.controller.getParent().playSound("dahai2")
+                    else if(a === 2) self.controller.getParent().playSound("dahai3")
+
                     self.updateTehai(self.tehai)
                 }
             })
@@ -209,7 +204,7 @@ export class Game4 implements Game {
         this.controller.tehai.getChildByName("Tsumo Node Temp").addChild(temp)
 
         if(this.option.auto_dahai){
-            setTimeout(() => {func.call(self)}, 1000)
+            setTimeout(() => {func.call(self)}, 500)
         }
     }
 
@@ -249,6 +244,11 @@ export class Game4 implements Game {
         }else if(cha === "toi"){
             this.controller.toiSutehai.addChild(temp)
         }
+
+        const a = Math.floor(Math.random() * 3)
+        if(a === 0) this.controller.getParent().playSound("dahai1")
+        else if(a === 1) this.controller.getParent().playSound("dahai2")
+        else if(a === 2) this.controller.getParent().playSound("dahai3")
     }
 
     public onTimeout(json: string): void {
@@ -257,11 +257,29 @@ export class Game4 implements Game {
             if(parsed["protocol"] === "dahai"){
                 if("hai" in parsed){
                     if(typeof parsed["hai"] === "number"){
-                        //ツモ牌と手牌を区別する必要がある
                         const n = this.getHaiTempNum(parsed["hai"])
                         const temp = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
                         this.controller.sutehai.addChild(temp)
                     }
+                }
+            }else if(parsed["protocol"] === "skip"){
+                this.clearButton()
+                const hai1 = this.controller.kamiSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                if(hai1 !== null){
+                    hai1.stopAction(this.dahai_cache["anim"])
+                    hai1.opacity = 255
+                }
+
+                const hai2 = this.controller.simoSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                if(hai2 !== null){
+                    hai2.stopAction(this.dahai_cache["anim"])
+                    hai2.opacity = 255
+                }
+
+                const hai3 = this.controller.toiSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                if(hai3 !== null){
+                    hai3.stopAction(this.dahai_cache["anim"])
+                    hai3.opacity = 255
                 }
             }
         }
@@ -271,7 +289,16 @@ export class Game4 implements Game {
         const parsed = JSON.parse(json)
         if(!("dahai" in parsed)){
             if("chi" in parsed || "pon" in parsed || "kan" in parsed || "hora" in parsed){
-                this.controller.node.getChildByName("Skip Button").active = true
+                if("hora" in parsed){
+                    this.controller.getParent().playSound("horaNoti")
+                }else if(!this.option.disable_furo){
+                    this.controller.getParent().playSound("noti")
+                }
+                if(!this.option.disable_furo){
+                    this.controller.node.getChildByName("Skip Button").active = true
+                }else if("hora" in parsed){
+                    this.controller.node.getChildByName("Skip Button").active = true
+                }
                 const self = this
 
                 const func: Function = () => {
@@ -287,82 +314,212 @@ export class Game4 implements Game {
                             //err?
                         }
                     })
+                    self.controller.getParent().playSound("click")
                 }
-
-                if(!this.option.disable_furo){
-                    this.controller.node.getChildByName("Skip Button").once(cc.Node.EventType.TOUCH_END, func, this)
+                if(this.option.disable_furo && !("hora" in parsed)){
+                    setTimeout(() => {func.call(self)}, 100)
                 }else{
-                    setTimeout(() => {func.call(self)}, 1000)
+                    this.controller.node.getChildByName("Skip Button").once(cc.Node.EventType.TOUCH_END, func, this)
                 }
             }
         }
         if("chi" in parsed){
             if("hai" in parsed["chi"] && "combi" in parsed["chi"] && "from" in parsed["chi"]){
-                this.controller.node.getChildByName("Chi Button").active = true
-                const self = this
+                if(!this.option.disable_furo){
+                    this.controller.node.getChildByName("Chi Button").active = true
+                    const self = this
 
-                const kz = this.getCha(parsed["chi"]["from"])
-                if(kz === "kami"){
-                    const hai = this.controller.kamiSutehai.getChildByUuid(this.dahai_cache["uuid"])
-                    hai.runAction(this.dahai_cache["anim"])
-                }else if(kz === "simo"){
-                    const hai = this.controller.simoSutehai.getChildByUuid(this.dahai_cache["uuid"])
-                    hai.runAction(this.dahai_cache["anim"])
-                }else if(kz === "toi"){
-                    const hai = this.controller.toiSutehai.getChildByUuid(this.dahai_cache["uuid"])
-                    hai.runAction(this.dahai_cache["anim"])
-                }
-
-                this.controller.node.getChildByName("Chi Button").once(cc.Node.EventType.TOUCH_END, () => {
-                    const old_id = self.timer_id
-                    self.clearButton()
-
-                    const combi: number[][] = parsed["chi"]["combi"]
-                    let r_combi: number[]
-                    if(combi.length > 1){
-                        //選択肢を出して
-                        const chiNode = cc.instantiate(self.controller.chiNode)
-                        for(let c of combi){
-                            const chiCombi = cc.instantiate(self.controller.chiCombiNode)
-                            for(let h of c){
-                                if(h === parsed["chi"]["hai"][0]) continue
-                                const n = this.getHaiTempNum(h)
-                                const hai = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
-                                chiCombi.addChild(hai)
-                            }
-                            chiCombi.once(cc.Node.EventType.TOUCH_END, () => {
-                                excuteChi(c)
-                            })
-                            chiNode.getChildByName("Hai Node").addChild(chiCombi)
-                        }
-                        self.controller.node.addChild(chiNode)
-                        clearAnim()
-                    }else{
-                        r_combi = combi[0]
-                        excuteChi()
+                    const kz = this.getCha(parsed["chi"]["from"])
+                    if(kz === "kami"){
+                        const hai = this.controller.kamiSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                        hai.runAction(this.dahai_cache["anim"])
+                    }else if(kz === "simo"){
+                        const hai = this.controller.simoSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                        hai.runAction(this.dahai_cache["anim"])
+                    }else if(kz === "toi"){
+                        const hai = this.controller.toiSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                        hai.runAction(this.dahai_cache["anim"])
                     }
 
-                    function excuteChi(option: number[] = []){
-                        const hai: number = parsed["chi"]["hai"][0]
-                        let result: Promise<boolean>
-                        if(option.length !== 0){
-                            result = self.controller.getProtocol().emit("chi", {"protocol": "chi", "hai": hai, "combi": option})
+                    this.controller.node.getChildByName("Chi Button").once(cc.Node.EventType.TOUCH_END, () => {
+                        self.controller.getParent().playSound("click")
+                        const old_id = self.timer_id
+                        self.clearButton()
+
+                        const combi: number[][] = parsed["chi"]["combi"]
+                        let r_combi: number[]
+                        if(combi.length > 1){
+                            //選択肢を出して
+                            const chiNode = cc.instantiate(self.controller.chiNode)
+                            for(let c of combi){
+                                const chiCombi = cc.instantiate(self.controller.chiCombiNode)
+                                for(let h of c){
+                                    if(h === parsed["chi"]["hai"][0]) continue
+                                    const n = this.getHaiTempNum(h)
+                                    const hai = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
+                                    chiCombi.addChild(hai)
+                                }
+                                chiCombi.once(cc.Node.EventType.TOUCH_END, () => {
+                                    excuteChi(c)
+                                })
+                                chiNode.getChildByName("Hai Node").addChild(chiCombi)
+                            }
+                            self.controller.node.addChild(chiNode)
+                            clearAnim()
                         }else{
-                            result = self.controller.getProtocol().emit("chi", {"protocol": "chi", "hai": hai, "combi": r_combi})
+                            r_combi = combi[0]
+                            excuteChi()
                         }
+
+                        function excuteChi(option: number[] = []){
+                            const hai: number = parsed["chi"]["hai"][0]
+                            let result: Promise<boolean>
+                            if(option.length !== 0){
+                                result = self.controller.getProtocol().emit("chi", {"protocol": "chi", "hai": hai, "combi": option})
+                            }else{
+                                result = self.controller.getProtocol().emit("chi", {"protocol": "chi", "hai": hai, "combi": r_combi})
+                            }
+                            if(result === null) return
+                            result.then((bool) => {
+                                if(bool){
+                                    self.controller.logoNode.opacity = 0
+                                    const logo = cc.instantiate(self.controller.chiLogo)
+                                    self.controller.logoNode.addChild(logo)
+                                    self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
+                                    const clear = () => {
+                                        self.controller.logoNode.removeAllChildren()
+                                    }
+                                    setTimeout(clear, 2000)
+                    
+                                    const kz = self.getCha(parsed["chi"]["from"])
+                                    if(kz === "kami"){
+                                        const c = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                        self.controller.kamiSutehai.removeChild(c)
+                                    }else if(kz === "simo"){
+                                        const c = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                        self.controller.simoSutehai.removeChild(c)
+                                    }else if(kz === "toi"){
+                                        const c = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                        self.controller.toiSutehai.removeChild(c)
+                                    }
+                    
+                                    if(old_id === self.timer_id) self.clearTimer()
+                                    if(option.length !== 0){
+                                        for(let h of option){
+                                            if(h === hai) continue
+                                            self.tehai.splice(self.tehai.indexOf(h), 1)
+                                        }
+                                        let i = 0
+                                        for(let h of option){
+                                            if(h === hai){
+                                                break
+                                            }
+                                            i++
+                                        }
+
+                                        let j = 0
+                                        if(kz === "kami") j = 1
+                                        else if(kz === "simo") j = 3
+                                        else if(kz === "toi") j = 2
+
+                                        let opti = option.slice()
+                                        if(i === 0) opti[0] = opti[0] + j
+                                        else if(i === 1) opti[1] = opti[1] + j
+                                        else if(i === 2) opti[2] = opti[2] + j
+                                        self.furo[self.kaze].push(self.reChi(opti))
+                                    }else{
+                                        for(let h of r_combi){
+                                            if(h === hai) continue
+                                            self.tehai.splice(self.tehai.indexOf(h), 1)
+                                        }
+                                        let i = 0
+                                        for(let h of r_combi){
+                                            if(h === hai){
+                                                break
+                                            }
+                                            i++
+                                        }
+
+                                        let j = 0
+                                        if(kz === "kami") j = 1
+                                        else if(kz === "simo") j = 3
+                                        else if(kz === "toi") j = 2
+
+                                        if(i === 0) r_combi[0] = r_combi[0] + j
+                                        else if(i === 1) r_combi[1] = r_combi[1] + j
+                                        else if(i === 2) r_combi[2] = r_combi[2] + j
+                                        self.furo[self.kaze].push(self.reChi(r_combi))
+                                    }
+                                    self.updateTehai(self.tehai)
+                                    self.updateNakihai(self.furo[self.kaze], self.kaze)
+
+                                    const a = Math.floor(Math.random() * 3)
+                                    if(a === 0) self.controller.getParent().playSound("furo1")
+                                    else if(a === 1) self.controller.getParent().playSound("furo2")
+                                    else if(a === 2) self.controller.getParent().playSound("furo3")
+                                }else{
+                                    clearAnim()
+                                    self.clearTimer()
+                                }
+                            })
+                        }
+
+                        function clearAnim(){
+                            if(kz === "kami"){
+                                const d_hai = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                d_hai.stopAction(self.dahai_cache["anim"])
+                                d_hai.opacity = 255
+                            }else if(kz === "simo"){
+                                const d_hai = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                d_hai.stopAction(self.dahai_cache["anim"])
+                                d_hai.opacity = 255
+                            }else if(kz === "toi"){
+                                const d_hai = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                d_hai.stopAction(self.dahai_cache["anim"])
+                                d_hai.opacity = 255
+                            }
+                        }
+                    }, this)
+                }
+            }
+        }
+        if("pon" in parsed){
+            if("hai" in parsed["pon"] && "combi" in parsed["pon"] && "from" in parsed["pon"]){
+                if(!this.option.disable_furo){
+                    this.controller.node.getChildByName("Pon Button").active = true
+                    const self = this
+
+                    const kz = this.getCha(parsed["pon"]["from"])
+                    if(kz === "kami"){
+                        const hai = this.controller.kamiSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                        hai.runAction(this.dahai_cache["anim"])
+                    }else if(kz === "simo"){
+                        const hai = this.controller.simoSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                        hai.runAction(this.dahai_cache["anim"])
+                    }else if(kz === "toi"){
+                        const hai = this.controller.toiSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                        hai.runAction(this.dahai_cache["anim"])
+                    }
+
+                    this.controller.node.getChildByName("Pon Button").once(cc.Node.EventType.TOUCH_END, () => {
+                        self.controller.getParent().playSound("click")
+                        const old_id = self.timer_id
+                        self.clearButton()
+                        const hai: number = parsed["pon"]["hai"][0]
+                        const result = self.controller.getProtocol().emit("pon", {"protocol": "pon", "hai": hai, "combi": [hai,hai,hai]})
                         if(result === null) return
                         result.then((bool) => {
                             if(bool){
                                 self.controller.logoNode.opacity = 0
-                                const logo = cc.instantiate(self.controller.chiLogo)
+                                const logo = cc.instantiate(self.controller.ponLogo)
                                 self.controller.logoNode.addChild(logo)
                                 self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
                                 const clear = () => {
                                     self.controller.logoNode.removeAllChildren()
                                 }
                                 setTimeout(clear, 2000)
-                
-                                const kz = self.getCha(parsed["chi"]["from"])
+
+                                const kz = self.getCha(parsed["pon"]["from"])
                                 if(kz === "kami"){
                                     const c = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
                                     self.controller.kamiSutehai.removeChild(c)
@@ -373,307 +530,221 @@ export class Game4 implements Game {
                                     const c = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
                                     self.controller.toiSutehai.removeChild(c)
                                 }
-                
+
                                 if(old_id === self.timer_id) self.clearTimer()
-                                if(option.length !== 0){
-                                    for(let h of option){
-                                        if(h === hai) continue
-                                        self.tehai.splice(self.tehai.indexOf(h), 1)
-                                    }
-                                    let i = 0
-                                    for(let h of option){
-                                        if(h === hai){
-                                            break
-                                        }
-                                        i++
-                                    }
-
-                                    let j = 0
-                                    if(kz === "kami") j = 1
-                                    else if(kz === "simo") j = 3
-                                    else if(kz === "toi") j = 2
-
-                                    let opti = option.slice()
-                                    if(i === 0) opti[0] = opti[0] + j
-                                    else if(i === 1) opti[1] = opti[1] + j
-                                    else if(i === 2) opti[2] = opti[2] + j
-                                    self.furo[self.kaze].push(self.reChi(opti))
-                                }else{
-                                    for(let h of r_combi){
-                                        if(h === hai) continue
-                                        self.tehai.splice(self.tehai.indexOf(h), 1)
-                                    }
-                                    let i = 0
-                                    for(let h of r_combi){
-                                        if(h === hai){
-                                            break
-                                        }
-                                        i++
-                                    }
-
-                                    let j = 0
-                                    if(kz === "kami") j = 1
-                                    else if(kz === "simo") j = 3
-                                    else if(kz === "toi") j = 2
-
-                                    if(i === 0) r_combi[0] = r_combi[0] + j
-                                    else if(i === 1) r_combi[1] = r_combi[1] + j
-                                    else if(i === 2) r_combi[2] = r_combi[2] + j
-                                    self.furo[self.kaze].push(self.reChi(r_combi))
-                                }
+                                let combi = [hai,hai,hai]
+                                if(kz === "kami") combi[2] = combi[2] + 1
+                                else if(kz === "simo") combi[0] = combi[0] + 3
+                                else if(kz === "toi") combi[1] = combi[1] + 2
+                                self.furo[self.kaze].push(combi)
+                                self.tehai.splice(self.tehai.indexOf(hai), 1)
+                                self.tehai.splice(self.tehai.indexOf(hai), 1)
                                 self.updateTehai(self.tehai)
                                 self.updateNakihai(self.furo[self.kaze], self.kaze)
+
+                                const a = Math.floor(Math.random() * 3)
+                                if(a === 0) self.controller.getParent().playSound("furo1")
+                                else if(a === 1) self.controller.getParent().playSound("furo2")
+                                else if(a === 2) self.controller.getParent().playSound("furo3")
                             }else{
-                                clearAnim()
+                                if(kz === "kami"){
+                                    const d_hai = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                    d_hai.stopAction(self.dahai_cache["anim"])
+                                    d_hai.opacity = 255
+                                }else if(kz === "simo"){
+                                    const d_hai = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                    d_hai.stopAction(self.dahai_cache["anim"])
+                                    d_hai.opacity = 255
+                                }else if(kz === "toi"){
+                                    const d_hai = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                    d_hai.stopAction(self.dahai_cache["anim"])
+                                    d_hai.opacity = 255
+                                }
                                 self.clearTimer()
                             }
                         })
-                    }
-
-                    function clearAnim(){
-                        if(kz === "kami"){
-                            const d_hai = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                            d_hai.stopAction(self.dahai_cache["anim"])
-                            d_hai.opacity = 255
-                        }else if(kz === "simo"){
-                            const d_hai = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                            d_hai.stopAction(self.dahai_cache["anim"])
-                            d_hai.opacity = 255
-                        }else if(kz === "toi"){
-                            const d_hai = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                            d_hai.stopAction(self.dahai_cache["anim"])
-                            d_hai.opacity = 255
-                        }
-                    }
-                }, this)
-            }
-        }
-        if("pon" in parsed){
-            if("hai" in parsed["pon"] && "combi" in parsed["pon"] && "from" in parsed["pon"]){
-                this.controller.node.getChildByName("Pon Button").active = true
-                const self = this
-
-                const kz = this.getCha(parsed["pon"]["from"])
-                if(kz === "kami"){
-                    const hai = this.controller.kamiSutehai.getChildByUuid(this.dahai_cache["uuid"])
-                    hai.runAction(this.dahai_cache["anim"])
-                }else if(kz === "simo"){
-                    const hai = this.controller.simoSutehai.getChildByUuid(this.dahai_cache["uuid"])
-                    hai.runAction(this.dahai_cache["anim"])
-                }else if(kz === "toi"){
-                    const hai = this.controller.toiSutehai.getChildByUuid(this.dahai_cache["uuid"])
-                    hai.runAction(this.dahai_cache["anim"])
+                    }, this)
                 }
-
-                this.controller.node.getChildByName("Pon Button").once(cc.Node.EventType.TOUCH_END, () => {
-                    const old_id = self.timer_id
-                    self.clearButton()
-                    const hai: number = parsed["pon"]["hai"][0]
-                    const result = self.controller.getProtocol().emit("pon", {"protocol": "pon", "hai": hai, "combi": [hai,hai,hai]})
-                    if(result === null) return
-                    result.then((bool) => {
-                        if(bool){
-                            self.controller.logoNode.opacity = 0
-                            const logo = cc.instantiate(self.controller.ponLogo)
-                            self.controller.logoNode.addChild(logo)
-                            self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
-                            const clear = () => {
-                                self.controller.logoNode.removeAllChildren()
-                            }
-                            setTimeout(clear, 2000)
-
-                            const kz = self.getCha(parsed["pon"]["from"])
-                            if(kz === "kami"){
-                                const c = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                self.controller.kamiSutehai.removeChild(c)
-                            }else if(kz === "simo"){
-                                const c = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                self.controller.simoSutehai.removeChild(c)
-                            }else if(kz === "toi"){
-                                const c = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                self.controller.toiSutehai.removeChild(c)
-                            }
-
-                            if(old_id === self.timer_id) self.clearTimer()
-                            let combi = [hai,hai,hai]
-                            if(kz === "kami") combi[2] = combi[2] + 1
-                            else if(kz === "simo") combi[0] = combi[0] + 3
-                            else if(kz === "toi") combi[1] = combi[1] + 2
-                            self.furo[self.kaze].push(combi)
-                            self.tehai.splice(self.tehai.indexOf(hai), 1)
-                            self.tehai.splice(self.tehai.indexOf(hai), 1)
-                            self.updateTehai(self.tehai)
-                            self.updateNakihai(self.furo[self.kaze], self.kaze)
-                        }else{
-                            if(kz === "kami"){
-                                const d_hai = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                d_hai.stopAction(self.dahai_cache["anim"])
-                                d_hai.opacity = 255
-                            }else if(kz === "simo"){
-                                const d_hai = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                d_hai.stopAction(self.dahai_cache["anim"])
-                                d_hai.opacity = 255
-                            }else if(kz === "toi"){
-                                const d_hai = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                d_hai.stopAction(self.dahai_cache["anim"])
-                                d_hai.opacity = 255
-                            }
-                            self.clearTimer()
-                        }
-                    })
-                }, this)
             }
         }
         if("kan" in parsed){
             if("hai" in parsed["kan"] && "combi" in parsed["kan"] && "from" in parsed["kan"]){
-                this.controller.node.getChildByName("Kan Button").active = true
-                const self = this
+                if(!this.option.disable_furo){
+                    this.controller.node.getChildByName("Kan Button").active = true
+                    const self = this
 
-                const kz = this.getCha(parsed["kan"]["from"])
-                if(kz === "kami"){
-                    const hai = this.controller.kamiSutehai.getChildByUuid(this.dahai_cache["uuid"])
-                    hai.runAction(this.dahai_cache["anim"])
-                }else if(kz === "simo"){
-                    const hai = this.controller.simoSutehai.getChildByUuid(this.dahai_cache["uuid"])
-                    hai.runAction(this.dahai_cache["anim"])
-                }else if(kz === "toi"){
-                    const hai = this.controller.toiSutehai.getChildByUuid(this.dahai_cache["uuid"])
-                    hai.runAction(this.dahai_cache["anim"])
+                    const kz = this.getCha(parsed["kan"]["from"])
+                    if(kz === "kami"){
+                        const hai = this.controller.kamiSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                        hai.runAction(this.dahai_cache["anim"])
+                    }else if(kz === "simo"){
+                        const hai = this.controller.simoSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                        hai.runAction(this.dahai_cache["anim"])
+                    }else if(kz === "toi"){
+                        const hai = this.controller.toiSutehai.getChildByUuid(this.dahai_cache["uuid"])
+                        hai.runAction(this.dahai_cache["anim"])
+                    }
+
+                    this.controller.node.getChildByName("Kan Button").once(cc.Node.EventType.TOUCH_END, () => {
+                        self.controller.getParent().playSound("click")
+                        const old_id = self.timer_id
+                        self.clearButton()
+                        const hai: number = parsed["kan"]["hai"][0]
+                        const result = self.controller.getProtocol().emit("kan", {"protocol": "kan", "hai": hai, "combi": [hai,hai,hai,hai]})
+                        if(result === null) return
+                        result.then((bool) => {
+                            if(bool){
+                                self.controller.logoNode.opacity = 0
+                                const logo = cc.instantiate(self.controller.kanLogo)
+                                self.controller.logoNode.addChild(logo)
+                                self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
+                                const clear = () => {
+                                    self.controller.logoNode.removeAllChildren()
+                                }
+                                setTimeout(clear, 2000)
+
+                                const kz = self.getCha(parsed["pon"]["from"])
+                                if(kz === "kami"){
+                                    const c = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                    self.controller.kamiSutehai.removeChild(c)
+                                }else if(kz === "simo"){
+                                    const c = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                    self.controller.simoSutehai.removeChild(c)
+                                }else if(kz === "toi"){
+                                    const c = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                    self.controller.toiSutehai.removeChild(c)
+                                }
+
+                                if(old_id === self.timer_id) self.clearTimer()
+                                let combi = [hai,hai,hai,hai]
+                                if(kz === "kami") combi[3] = combi[3] + 1
+                                else if(kz === "simo") combi[0] = combi[0] + 3
+                                else if(kz === "toi") combi[1] = combi[1] + 2
+                                self.furo[self.kaze].push(combi)
+                                self.tehai.splice(self.tehai.indexOf(hai), 1)
+                                self.tehai.splice(self.tehai.indexOf(hai), 1)
+                                self.tehai.splice(self.tehai.indexOf(hai), 1)
+                                self.updateTehai(self.tehai)
+                                self.updateNakihai(self.furo[self.kaze], self.kaze)
+
+                                const a = Math.floor(Math.random() * 3)
+                                if(a === 0) self.controller.getParent().playSound("furo1")
+                                else if(a === 1) self.controller.getParent().playSound("furo2")
+                                else if(a === 2) self.controller.getParent().playSound("furo3")
+                            }else{
+                                if(kz === "kami"){
+                                    const d_hai = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                    d_hai.stopAction(self.dahai_cache["anim"])
+                                    d_hai.opacity = 255
+                                }else if(kz === "simo"){
+                                    const d_hai = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                    d_hai.stopAction(self.dahai_cache["anim"])
+                                    d_hai.opacity = 255
+                                }else if(kz === "toi"){
+                                    const d_hai = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                    d_hai.stopAction(self.dahai_cache["anim"])
+                                    d_hai.opacity = 255
+                                }
+                                self.clearTimer()
+                            }
+                        })
+                    }, this)
                 }
-
-                this.controller.node.getChildByName("Kan Button").once(cc.Node.EventType.TOUCH_END, () => {
-                    const old_id = self.timer_id
-                    self.clearButton()
-                    const hai: number = parsed["kan"]["hai"][0]
-                    const result = self.controller.getProtocol().emit("kan", {"protocol": "kan", "hai": hai, "combi": [hai,hai,hai,hai]})
-                    if(result === null) return
-                    result.then((bool) => {
-                        if(bool){
-                            self.controller.logoNode.opacity = 0
-                            const logo = cc.instantiate(self.controller.kanLogo)
-                            self.controller.logoNode.addChild(logo)
-                            self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
-                            const clear = () => {
-                                self.controller.logoNode.removeAllChildren()
-                            }
-                            setTimeout(clear, 2000)
-
-                            const kz = self.getCha(parsed["pon"]["from"])
-                            if(kz === "kami"){
-                                const c = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                self.controller.kamiSutehai.removeChild(c)
-                            }else if(kz === "simo"){
-                                const c = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                self.controller.simoSutehai.removeChild(c)
-                            }else if(kz === "toi"){
-                                const c = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                self.controller.toiSutehai.removeChild(c)
-                            }
-
-                            if(old_id === self.timer_id) self.clearTimer()
-                            let combi = [hai,hai,hai,hai]
-                            if(kz === "kami") combi[3] = combi[3] + 1
-                            else if(kz === "simo") combi[0] = combi[0] + 3
-                            else if(kz === "toi") combi[1] = combi[1] + 2
-                            self.furo[self.kaze].push(combi)
-                            self.tehai.splice(self.tehai.indexOf(hai), 1)
-                            self.tehai.splice(self.tehai.indexOf(hai), 1)
-                            self.tehai.splice(self.tehai.indexOf(hai), 1)
-                            self.updateTehai(self.tehai)
-                            self.updateNakihai(self.furo[self.kaze], self.kaze)
-                        }else{
-                            if(kz === "kami"){
-                                const d_hai = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                d_hai.stopAction(self.dahai_cache["anim"])
-                                d_hai.opacity = 255
-                            }else if(kz === "simo"){
-                                const d_hai = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                d_hai.stopAction(self.dahai_cache["anim"])
-                                d_hai.opacity = 255
-                            }else if(kz === "toi"){
-                                const d_hai = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                d_hai.stopAction(self.dahai_cache["anim"])
-                                d_hai.opacity = 255
-                            }
-                            self.clearTimer()
-                        }
-                    })
-                }, this)
             }
         }else if("ankan" in parsed){
             if("hai" in parsed["ankan"] && "combi" in parsed["ankan"]){
-                this.controller.node.getChildByName("Kan Button").active = true
-                const self = this
-                this.controller.node.getChildByName("Kan Button").once(cc.Node.EventType.TOUCH_END, () => {
-                    const old_id = self.timer_id
-                    self.clearButton()
-                    const hai: number = parsed["ankan"]["hai"][0]
-                    const result = self.controller.getProtocol().emit("ankan", {"protocol": "ankan", "hai": hai, "combi": [hai,hai,hai,hai]})
-                    if(result === null) return
-                    result.then((bool) => {
-                        if(bool){
-                            self.controller.logoNode.opacity = 0
-                            const logo = cc.instantiate(self.controller.kanLogo)
-                            self.controller.logoNode.addChild(logo)
-                            self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
-                            const clear = () => {
-                                self.controller.logoNode.removeAllChildren()
-                            }
-                            setTimeout(clear, 2000)
+                if(!this.option.disable_furo){
+                    this.controller.getParent().playSound("noti")
+                    this.controller.node.getChildByName("Kan Button").active = true
+                    const self = this
+                    this.controller.node.getChildByName("Kan Button").once(cc.Node.EventType.TOUCH_END, () => {
+                        self.controller.getParent().playSound("click")
+                        const old_id = self.timer_id
+                        self.clearButton()
+                        const hai: number = parsed["ankan"]["hai"][0]
+                        const result = self.controller.getProtocol().emit("ankan", {"protocol": "ankan", "hai": hai, "combi": [hai,hai,hai,hai]})
+                        if(result === null) return
+                        result.then((bool) => {
+                            if(bool){
+                                self.controller.logoNode.opacity = 0
+                                const logo = cc.instantiate(self.controller.kanLogo)
+                                self.controller.logoNode.addChild(logo)
+                                self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
+                                const clear = () => {
+                                    self.controller.logoNode.removeAllChildren()
+                                }
+                                setTimeout(clear, 2000)
 
-                            if(old_id === self.timer_id) self.clearTimer()
-                            self.furo[self.kaze].push([500,hai,hai,500])
-                            self.tehai.splice(self.tehai.indexOf(hai), 1)
-                            self.tehai.splice(self.tehai.indexOf(hai), 1)
-                            self.tehai.splice(self.tehai.indexOf(hai), 1)
-                            self.updateTehai(self.tehai)
-                            self.updateNakihai(self.furo[self.kaze], self.kaze)
-                        }else{
-                            //err?
-                        }
-                    })
-                }, this)
+                                if(old_id === self.timer_id) self.clearTimer()
+                                self.furo[self.kaze].push([500,hai,hai,500])
+                                self.tehai.splice(self.tehai.indexOf(hai), 1)
+                                self.tehai.splice(self.tehai.indexOf(hai), 1)
+                                self.tehai.splice(self.tehai.indexOf(hai), 1)
+                                self.updateTehai(self.tehai)
+                                self.updateNakihai(self.furo[self.kaze], self.kaze)
+
+                                const a = Math.floor(Math.random() * 3)
+                                if(a === 0) self.controller.getParent().playSound("furo1")
+                                else if(a === 1) self.controller.getParent().playSound("furo2")
+                                else if(a === 2) self.controller.getParent().playSound("furo3")
+                            }else{
+                                //err?
+                            }
+                        })
+                    }, this)
+                }
             }
         }else if("kakan" in parsed){
             if("hai" in parsed["kakan"] && "combi" in parsed["kakan"]){
-                this.controller.node.getChildByName("Kan Button").active = true
-                const self = this
-                this.controller.node.getChildByName("Kan Button").once(cc.Node.EventType.TOUCH_END, () => {
-                    const old_id = self.timer_id
-                    self.clearButton()
-                    const hai: number = parsed["kakan"]["hai"][0]
-                    const result = self.controller.getProtocol().emit("kakan", {"protocol": "kakan", "hai": hai, "combi": [hai,hai,hai,hai]})
-                    if(result === null) return
-                    result.then((bool) => {
-                        if(bool){
-                            self.controller.logoNode.opacity = 0
-                            const logo = cc.instantiate(self.controller.kanLogo)
-                            self.controller.logoNode.addChild(logo)
-                            self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
-                            const clear = () => {
-                                self.controller.logoNode.removeAllChildren()
-                            }
-                            setTimeout(clear, 2000)
+                if(!this.option.disable_furo){
+                    this.controller.getParent().playSound("noti")
+                    this.controller.node.getChildByName("Kan Button").active = true
+                    const self = this
+                    this.controller.node.getChildByName("Kan Button").once(cc.Node.EventType.TOUCH_END, () => {
+                        self.controller.getParent().playSound("click")
+                        const old_id = self.timer_id
+                        self.clearButton()
+                        const hai: number = parsed["kakan"]["hai"][0]
+                        const result = self.controller.getProtocol().emit("kakan", {"protocol": "kakan", "hai": hai, "combi": [hai,hai,hai,hai]})
+                        if(result === null) return
+                        result.then((bool) => {
+                            if(bool){
+                                self.controller.logoNode.opacity = 0
+                                const logo = cc.instantiate(self.controller.kanLogo)
+                                self.controller.logoNode.addChild(logo)
+                                self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
+                                const clear = () => {
+                                    self.controller.logoNode.removeAllChildren()
+                                }
+                                setTimeout(clear, 2000)
 
-                            if(old_id === self.timer_id) self.clearTimer()
-                            self.furo[self.kaze].splice(self.furo[self.kaze].indexOf([hai,hai,hai]), 1)
-                            self.furo[self.kaze].push([hai,hai,hai,hai])//これだと最後尾に入れることになる
-                            self.updateNakihai(self.furo[self.kaze], self.kaze)
-                        }else{
-                            //err?
-                        }
-                    })
-                }, this)
+                                if(old_id === self.timer_id) self.clearTimer()
+                                self.furo[self.kaze].splice(self.furo[self.kaze].indexOf([hai,hai,hai]), 1)
+                                self.furo[self.kaze].push([hai,hai,hai,hai])//これだと最後尾に入れることになる
+                                self.updateNakihai(self.furo[self.kaze], self.kaze)
+
+                                const a = Math.floor(Math.random() * 3)
+                                if(a === 0) self.controller.getParent().playSound("furo1")
+                                else if(a === 1) self.controller.getParent().playSound("furo2")
+                                else if(a === 2) self.controller.getParent().playSound("furo3")
+                            }else{
+                                //err?
+                            }
+                        })
+                    }, this)
+                }
             }
         }
         if("hora" in parsed){
             if("dahai" in parsed){
                 if("hai" in parsed["hora"]){
+                    this.controller.getParent().playSound("horaNoti")
                     this.controller.horaBtnLabel.string = "ツモ"
                     this.controller.node.getChildByName("Hora Button").active = true
                     const self = this
 
                     const func: Function = () => {
+                        self.controller.getParent().playSound("click")
                         self.clearButton()
                         const hai: number = parsed["hora"]["hai"][0]
                         const result = self.controller.getProtocol().emit("hora", {"protocol": "hora", "hai": hai})
@@ -699,7 +770,7 @@ export class Game4 implements Game {
                     if(!this.option.auto_hora){
                         this.controller.node.getChildByName("Hora Button").once(cc.Node.EventType.TOUCH_END, func, this)
                     }else{
-                        setTimeout(() => {func.call(self)}, 1000)
+                        setTimeout(() => {func.call(self)}, 100)
                     }
                 }
             }else{
@@ -759,13 +830,16 @@ export class Game4 implements Game {
                     if(!this.option.auto_hora){
                         this.controller.node.getChildByName("Hora Button").once(cc.Node.EventType.TOUCH_END, func, this)
                     }else{
-                        setTimeout(() => {func.call(self)}, 1000)
+                        setTimeout(() => {func.call(self)}, 100)
                     }
                 }
             }
         }
         if("richi" in parsed){
             if("hai" in parsed["richi"]){
+                if(!("hora" in parsed)){
+                    this.controller.getParent().playSound("noti")
+                }
                 const richiHai: number[] = parsed["richi"]["hai"]
                 let hai: string[] = []
                 for(let rh of richiHai){
@@ -774,6 +848,7 @@ export class Game4 implements Game {
                 this.controller.node.getChildByName("Richi Button").active = true
                 const self = this
                 this.controller.node.getChildByName("Richi Button").once(cc.Node.EventType.TOUCH_END, () => {
+                    self.controller.getParent().playSound("click")
                     self.preRichi = true
                     self.clearButton()
                     //richi時の打牌行為を立直に変える処理を牌ノードごとに記入
@@ -814,6 +889,11 @@ export class Game4 implements Game {
                                                 self.dahai_cache["anim"] = cc.repeatForever(cc.sequence(cc.fadeIn(0.5), cc.fadeOut(0.5)))
                                                 self.isTsumo = false
 
+                                                const a = Math.floor(Math.random() * 3)
+                                                if(a === 0) self.controller.getParent().playSound("furo1")
+                                                else if(a === 1) self.controller.getParent().playSound("furo2")
+                                                else if(a === 2) self.controller.getParent().playSound("furo3")
+
                                                 self.updateTehai(self.tehai)
                                             }else{
                                                 //err?
@@ -852,6 +932,11 @@ export class Game4 implements Game {
                                         self.dahai_cache["kaze"] = self.kaze
                                         self.dahai_cache["uuid"] = s_temp.uuid
                                         self.dahai_cache["anim"] = cc.repeatForever(cc.sequence(cc.fadeIn(0.5), cc.fadeOut(0.5)))
+
+                                        const a = Math.floor(Math.random() * 3)
+                                        if(a === 0) self.controller.getParent().playSound("furo1")
+                                        else if(a === 1) self.controller.getParent().playSound("furo2")
+                                        else if(a === 2) self.controller.getParent().playSound("furo3")
                                     }else{
                                         //err?
                                     }
@@ -863,9 +948,13 @@ export class Game4 implements Game {
             }
         }
         if("kyushu" in parsed){
+            if(!("hora" in parsed) && !("richi" in parsed)){
+                this.controller.getParent().playSound("noti")
+            }
             this.controller.node.getChildByName("Ryukyoku Button").active = true
             const self = this
             this.controller.node.getChildByName("Ryukyoku Button").once(cc.Node.EventType.TOUCH_END, () => {
+                self.controller.getParent().playSound("click")
                 const old_id = self.timer_id
                 self.clearButton()
                 self.clearSutehai()
@@ -946,6 +1035,11 @@ export class Game4 implements Game {
 
         this.furo[kaze].push(this.reChi(combi))
         this.updateNakihai(this.furo[kaze], kaze)
+
+        const a = Math.floor(Math.random() * 3)
+        if(a === 0) this.controller.getParent().playSound("furo1")
+        else if(a === 1) this.controller.getParent().playSound("furo2")
+        else if(a === 2) this.controller.getParent().playSound("furo3")
     }
 
     public onPon(combi: number[], kaze: kaze_number): void {
@@ -1012,6 +1106,11 @@ export class Game4 implements Game {
 
         this.furo[kaze].push(combi)
         this.updateNakihai(this.furo[kaze], kaze)
+
+        const a = Math.floor(Math.random() * 3)
+        if(a === 0) this.controller.getParent().playSound("furo1")
+        else if(a === 1) this.controller.getParent().playSound("furo2")
+        else if(a === 2) this.controller.getParent().playSound("furo3")
     }
 
     public onKan(combi: number[], kaze: kaze_number): void {
@@ -1078,6 +1177,11 @@ export class Game4 implements Game {
 
         this.furo[kaze].push(combi)
         this.updateNakihai(this.furo[kaze], kaze)
+
+        const a = Math.floor(Math.random() * 3)
+        if(a === 0) this.controller.getParent().playSound("furo1")
+        else if(a === 1) this.controller.getParent().playSound("furo2")
+        else if(a === 2) this.controller.getParent().playSound("furo3")
     }
 
     public onAnkan(combi: number[], kaze: kaze_number): void {
@@ -1091,6 +1195,11 @@ export class Game4 implements Game {
                 this.controller.kamiLogoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+
+            const a = Math.floor(Math.random() * 3)
+            if(a === 0) this.controller.getParent().playSound("furo1")
+            else if(a === 1) this.controller.getParent().playSound("furo2")
+            else if(a === 2) this.controller.getParent().playSound("furo3")
         }else if(k === "simo"){
             this.controller.simoLogoNode.opacity = 0
             const logo = cc.instantiate(this.controller.kanLogo)
@@ -1100,6 +1209,11 @@ export class Game4 implements Game {
                 this.controller.simoLogoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+
+            const a = Math.floor(Math.random() * 3)
+            if(a === 0) this.controller.getParent().playSound("furo1")
+            else if(a === 1) this.controller.getParent().playSound("furo2")
+            else if(a === 2) this.controller.getParent().playSound("furo3")
         }else if(k === "toi"){
             this.controller.toiLogoNode.opacity = 0
             const logo = cc.instantiate(this.controller.kanLogo)
@@ -1109,6 +1223,11 @@ export class Game4 implements Game {
                 this.controller.toiLogoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+
+            const a = Math.floor(Math.random() * 3)
+            if(a === 0) this.controller.getParent().playSound("furo1")
+            else if(a === 1) this.controller.getParent().playSound("furo2")
+            else if(a === 2) this.controller.getParent().playSound("furo3")
         }
 
         this.furo[kaze].push(combi)
@@ -1126,6 +1245,11 @@ export class Game4 implements Game {
                 this.controller.kamiLogoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+
+            const a = Math.floor(Math.random() * 3)
+            if(a === 0) this.controller.getParent().playSound("furo1")
+            else if(a === 1) this.controller.getParent().playSound("furo2")
+            else if(a === 2) this.controller.getParent().playSound("furo3")
         }else if(k === "simo"){
             this.controller.simoLogoNode.opacity = 0
             const logo = cc.instantiate(this.controller.kanLogo)
@@ -1135,6 +1259,11 @@ export class Game4 implements Game {
                 this.controller.simoLogoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+
+            const a = Math.floor(Math.random() * 3)
+            if(a === 0) this.controller.getParent().playSound("furo1")
+            else if(a === 1) this.controller.getParent().playSound("furo2")
+            else if(a === 2) this.controller.getParent().playSound("furo3")
         }else if(k === "toi"){
             this.controller.toiLogoNode.opacity = 0
             const logo = cc.instantiate(this.controller.kanLogo)
@@ -1144,6 +1273,11 @@ export class Game4 implements Game {
                 this.controller.toiLogoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+
+            const a = Math.floor(Math.random() * 3)
+            if(a === 0) this.controller.getParent().playSound("furo1")
+            else if(a === 1) this.controller.getParent().playSound("furo2")
+            else if(a === 2) this.controller.getParent().playSound("furo3")
         }
 
         this.furo[kaze].push(combi)
@@ -1154,7 +1288,7 @@ export class Game4 implements Game {
         const result = cc.instantiate(this.controller.resultTemp)
         const parsed = JSON.parse(json)
         const parsed2 = JSON.parse(json2)
-        if("tehai" in parsed2 && "furo" in parsed2 && "horahai" in parsed2 && "dora" in parsed2 && "uradora" in parsed2 && "name" in parsed2){
+        if("tehai" in parsed2 && "furo" in parsed2 && "horahai" in parsed2 && "dora" in parsed2 && "uradora" in parsed2){
             let hai: number[] = parsed2["tehai"]
             const furo: number[][] = parsed2["furo"]
             const dora: number[] = parsed2["dora"]
@@ -1166,7 +1300,8 @@ export class Game4 implements Game {
                 }
                 hai.push(500)
             }
-            hai.push(parsed2["horahai"])
+            if(parsed2["horahai"].length !== 0)
+                hai.push(parsed2["horahai"])
 
             for(let h of hai){
                 const n = this.getHaiTempNum(h)
@@ -1206,11 +1341,20 @@ export class Game4 implements Game {
 
             let yakuman = 0
 
+            const yakuLbl = result.getChildByName("Yaku Label")
             for(let yaku of parsed["yakuhai"]){
-                const lbl = result.getChildByName("Yaku Label").getComponent(cc.Label)
-                lbl.string = lbl.string + yaku["name"] + " " + yaku["hansu"] + "飜, "
+                const lbl = cc.instantiate(this.controller.yakuLabel)
+                let space = "　"
+                let i = 12 - (yaku["name"].length + 3)
+                if(i > 0){
+                    for(i; i > 0; i--){
+                        space = space + "　"
+                    }
+                }
+                lbl.getComponent(cc.Label).string =  "　" + yaku["name"] + space + yaku["hansu"] + "飜"
                 if(yaku["hansu"] === "*") yakuman++
                 else if(yaku["hansu"] === "**") yakuman = yakuman + 2
+                yakuLbl.addChild(lbl)
             }
 
             const mangan = Mangan.getString(parsed["fu"], parsed["han"], yakuman)
@@ -1279,7 +1423,90 @@ export class Game4 implements Game {
         if(cCallback === null){
             const self = this
             result.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
+                self.controller.getParent().playSound("click")
                 self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+                const point_t = cc.instantiate(self.controller.pointTemp)
+
+                //name
+                point_t.getChildByName("Name").getComponent(cc.Label).string = self.controller.nameLabel.string
+                point_t.getChildByName("Kami Name").getComponent(cc.Label).string = self.controller.kamiNameLabel.string
+                point_t.getChildByName("Toi Name").getComponent(cc.Label).string = self.controller.toiNameLabel.string
+                point_t.getChildByName("Simo Name").getComponent(cc.Label).string = self.controller.simoNameLabel.string
+
+                //cmp
+                let cmp_ = 0
+                let cmp_k = 0
+                let cmp_t = 0
+                let cmp_s = 0
+                switch(this.kaze){
+                    case 0:
+                        cmp_ = parsed["bumpai"][0]
+                        cmp_k = parsed["bumpai"][1]
+                        cmp_t = parsed["bumpai"][2]
+                        cmp_s = parsed["bumpai"][3]
+                        break
+                    case 1:
+                        cmp_ = parsed["bumpai"][1]
+                        cmp_k = parsed["bumpai"][2]
+                        cmp_t = parsed["bumpai"][3]
+                        cmp_s = parsed["bumpai"][0]
+                        break
+                    case 2:
+                        cmp_ = parsed["bumpai"][2]
+                        cmp_k = parsed["bumpai"][3]
+                        cmp_t = parsed["bumpai"][0]
+                        cmp_s = parsed["bumpai"][1]
+                        break
+                    case 3:
+                        cmp_ = parsed["bumpai"][3]
+                        cmp_k = parsed["bumpai"][0]
+                        cmp_t = parsed["bumpai"][1]
+                        cmp_s = parsed["bumpai"][2]
+                        break
+                }
+                let cmps_ = cmp_.toString()
+                let cmps_k = cmp_k.toString()
+                let cmps_t = cmp_t.toString()
+                let cmps_s = cmp_s.toString()
+                if(cmp_ < 0){
+                    cmps_ = "(" + cmps_ + ")"
+                }else{
+                    cmps_ = "(+" + cmps_ + ")"
+                }
+                if(cmp_k < 0){
+                    cmps_k = "(" + cmps_k + ")"
+                }else{
+                    cmps_k = "(+" + cmps_k + ")"
+                }
+                if(cmp_t < 0){
+                    cmps_t = "(" + cmps_t + ")"
+                }else{
+                    cmps_t = "(+" + cmps_t + ")"
+                }
+                if(cmp_s < 0){
+                    cmps_s = "(" + cmps_s + ")"
+                }else{
+                    cmps_s = "(+" + cmps_s + ")"
+                }
+                point_t.getChildByName("Cmp").getComponent(cc.Label).string = cmps_
+                point_t.getChildByName("Kami Cmp").getComponent(cc.Label).string = cmps_k
+                point_t.getChildByName("Toi Cmp").getComponent(cc.Label).string = cmps_t
+                point_t.getChildByName("Simo Cmp").getComponent(cc.Label).string = cmps_s
+
+                //point
+                point_t.getChildByName("Point").getComponent(cc.Label).string = 
+                (Number(self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string) + cmp_).toString()
+                point_t.getChildByName("Kami Point").getComponent(cc.Label).string = 
+                (Number(self.controller.node.getChildByName("Kami Tensu").getComponent(cc.Label).string) + cmp_k).toString()
+                point_t.getChildByName("Toi Point").getComponent(cc.Label).string = 
+                (Number(self.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label).string) + cmp_t).toString()
+                point_t.getChildByName("Simo Point").getComponent(cc.Label).string = 
+                (Number(self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string) + cmp_s).toString()
+
+                point_t.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
+                    self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+                })
+                self.controller.node.addChild(point_t)
             })
         }else{
             result.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, cCallback)
@@ -1303,14 +1530,106 @@ export class Game4 implements Game {
         //トリロンは流局
         setTimeout(() => {
             if(kazes.length >= 3){
-                this.onRyukyoku("三家和")
+                let tehais: {[key in kaze_number]: number[]}
+                tehais = {0: null, 1: null, 2: null, 3: null}
+                let i = 0
+                for(let k of kazes){
+                    tehais[k] = parsed2[i]["tehai"]
+                    i++
+                }
+                this.onRyukyoku("三家和", tehais)
                 return
             }
             const self = this
             this.onHora(kazes[0], JSON.stringify(parsed[0]), JSON.stringify(parsed2[0]), false, () => {
                 self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
                 setTimeout(() => {
-                    self.onHora(kazes[1], JSON.stringify(parsed[1]), JSON.stringify(parsed2[1]), false)
+                    self.onHora(kazes[1], JSON.stringify(parsed[1]), JSON.stringify(parsed2[1]), false, () => {
+                        self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+                        const point_t = cc.instantiate(self.controller.pointTemp)
+
+                        //name
+                        point_t.getChildByName("Name").getComponent(cc.Label).string = self.controller.nameLabel.string
+                        point_t.getChildByName("Kami Name").getComponent(cc.Label).string = self.controller.kamiNameLabel.string
+                        point_t.getChildByName("Toi Name").getComponent(cc.Label).string = self.controller.toiNameLabel.string
+                        point_t.getChildByName("Simo Name").getComponent(cc.Label).string = self.controller.simoNameLabel.string
+
+                        //cmp
+                        let cmp_ = 0
+                        let cmp_k = 0
+                        let cmp_t = 0
+                        let cmp_s = 0
+                        switch(this.kaze){
+                            case 0:
+                                cmp_ = parsed[0]["bumpai"][0] + parsed[1]["bumpai"][0]
+                                cmp_k = parsed[0]["bumpai"][1] + parsed[1]["bumpai"][1]
+                                cmp_t = parsed[0]["bumpai"][2] + parsed[1]["bumpai"][2]
+                                cmp_s = parsed[0]["bumpai"][3] + parsed[1]["bumpai"][3]
+                                break
+                            case 1:
+                                cmp_ = parsed[0]["bumpai"][1] + parsed[1]["bumpai"][1]
+                                cmp_k = parsed[0]["bumpai"][2] + parsed[1]["bumpai"][2]
+                                cmp_t = parsed[0]["bumpai"][3] + parsed[1]["bumpai"][3]
+                                cmp_s = parsed[0]["bumpai"][0] + parsed[1]["bumpai"][0]
+                                break
+                            case 2:
+                                cmp_ = parsed[0]["bumpai"][2] + parsed[1]["bumpai"][2]
+                                cmp_k = parsed[0]["bumpai"][3] + parsed[1]["bumpai"][3]
+                                cmp_t = parsed[0]["bumpai"][0] + parsed[1]["bumpai"][0]
+                                cmp_s = parsed[0]["bumpai"][1] + parsed[1]["bumpai"][1]
+                                break
+                            case 3:
+                                cmp_ = parsed[0]["bumpai"][3] + parsed[1]["bumpai"][3]
+                                cmp_k = parsed[0]["bumpai"][0] + parsed[1]["bumpai"][0]
+                                cmp_t = parsed[0]["bumpai"][1] + parsed[1]["bumpai"][1]
+                                cmp_s = parsed[0]["bumpai"][2] + parsed[1]["bumpai"][2]
+                                break
+                        }
+                        let cmps_ = cmp_.toString()
+                        let cmps_k = cmp_k.toString()
+                        let cmps_t = cmp_t.toString()
+                        let cmps_s = cmp_s.toString()
+                        if(cmp_ < 0){
+                            cmps_ = "(" + cmps_ + ")"
+                        }else{
+                            cmps_ = "(+" + cmps_ + ")"
+                        }
+                        if(cmp_k < 0){
+                            cmps_k = "(" + cmps_k + ")"
+                        }else{
+                            cmps_k = "(+" + cmps_k + ")"
+                        }
+                        if(cmp_t < 0){
+                            cmps_t = "(" + cmps_t + ")"
+                        }else{
+                            cmps_t = "(+" + cmps_t + ")"
+                        }
+                        if(cmp_s < 0){
+                            cmps_s = "(" + cmps_s + ")"
+                        }else{
+                            cmps_s = "(+" + cmps_s + ")"
+                        }
+                        point_t.getChildByName("Cmp").getComponent(cc.Label).string = cmps_
+                        point_t.getChildByName("Kami Cmp").getComponent(cc.Label).string = cmps_k
+                        point_t.getChildByName("Toi Cmp").getComponent(cc.Label).string = cmps_t
+                        point_t.getChildByName("Simo Cmp").getComponent(cc.Label).string = cmps_s
+
+                        //point
+                        point_t.getChildByName("Point").getComponent(cc.Label).string = 
+                        (Number(self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string) + cmp_).toString()
+                        point_t.getChildByName("Kami Point").getComponent(cc.Label).string = 
+                        (Number(self.controller.node.getChildByName("Kami Tensu").getComponent(cc.Label).string) + cmp_k).toString()
+                        point_t.getChildByName("Toi Point").getComponent(cc.Label).string = 
+                        (Number(self.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label).string) + cmp_t).toString()
+                        point_t.getChildByName("Simo Point").getComponent(cc.Label).string = 
+                        (Number(self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string) + cmp_s).toString()
+
+                        point_t.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
+                            self.controller.getParent().playSound("click")
+                            self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+                        })
+                        self.controller.node.addChild(point_t)
+                    })
                 }, 500)
             })
         }, 2100)
@@ -1375,6 +1694,7 @@ export class Game4 implements Game {
             }
             setTimeout(clear, 2000)
         }
+        this.controller.getParent().playSound("hora")
     }
 
     public onRichi(richiHai: number, kaze: kaze_number): void {
@@ -1424,16 +1744,111 @@ export class Game4 implements Game {
         this.controller.node.getChildByName("Test Button").active = true
         const self = this
         this.controller.node.getChildByName("Test Button").once(cc.Node.EventType.TOUCH_END, () => {
+            self.controller.getParent().playSound("click")
            self.controller.getParent().getController().changeNode("room")
         }, this)
     }
 
-    public onRyukyoku(type: ryukyoku, tehais: {[key in kaze_number]: number[]} = null){
+    public onRyukyoku(type: ryukyoku, tehais: {[key in kaze_number]: number[]} = null, point: number[] = [0,0,0,0]){
         const ryukyoku = cc.instantiate(this.controller.ryukyokuNode)
         ryukyoku.getChildByName("Ryukyoku Label").getComponent(cc.Label).string = type
+        if(tehais !== null){
+            for(let k of Object.keys(tehais)){
+                let kaze: kaze_number = 0
+                if(k === "1") kaze = 1
+                else if(k === "2") kaze = 2
+                else if(k === "3") kaze = 3
+                if(kaze === this.kaze || tehais[k] === null) continue
+                this.addOtherTehai(kaze, tehais[k])
+            }
+        }
         const self = this
         ryukyoku.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
+            self.controller.getParent().playSound("click")
             self.controller.node.removeChild(self.controller.node.getChildByName("Ryukyoku Temp"))
+            const point_t = cc.instantiate(self.controller.pointTemp)
+
+            //name
+            point_t.getChildByName("Name").getComponent(cc.Label).string = self.controller.nameLabel.string
+            point_t.getChildByName("Kami Name").getComponent(cc.Label).string = self.controller.kamiNameLabel.string
+            point_t.getChildByName("Toi Name").getComponent(cc.Label).string = self.controller.toiNameLabel.string
+            point_t.getChildByName("Simo Name").getComponent(cc.Label).string = self.controller.simoNameLabel.string
+
+            //cmp
+            let cmp_ = 0
+            let cmp_k = 0
+            let cmp_t = 0
+            let cmp_s = 0
+            switch(this.kaze){
+                case 0:
+                    cmp_ = point[0]
+                    cmp_k = point[1]
+                    cmp_t = point[2]
+                    cmp_s = point[3]
+                    break
+                case 1:
+                    cmp_ = point[1]
+                    cmp_k = point[2]
+                    cmp_t = point[3]
+                    cmp_s = point[0]
+                    break
+                case 2:
+                    cmp_ = point[2]
+                    cmp_k = point[3]
+                    cmp_t = point[0]
+                    cmp_s = point[1]
+                    break
+                case 3:
+                    cmp_ = point[3]
+                    cmp_k = point[0]
+                    cmp_t = point[1]
+                    cmp_s = point[2]
+                    break
+            }
+            let cmps_ = cmp_.toString()
+            let cmps_k = cmp_k.toString()
+            let cmps_t = cmp_t.toString()
+            let cmps_s = cmp_s.toString()
+            if(cmp_ < 0){
+                cmps_ = "(" + cmps_ + ")"
+            }else{
+                cmps_ = "(+" + cmps_ + ")"
+            }
+            if(cmp_k < 0){
+                cmps_k = "(" + cmps_k + ")"
+            }else{
+                cmps_k = "(+" + cmps_k + ")"
+            }
+            if(cmp_t < 0){
+                cmps_t = "(" + cmps_t + ")"
+            }else{
+                cmps_t = "(+" + cmps_t + ")"
+            }
+            if(cmp_s < 0){
+                cmps_s = "(" + cmps_s + ")"
+            }else{
+                cmps_s = "(+" + cmps_s + ")"
+            }
+            point_t.getChildByName("Cmp").getComponent(cc.Label).string = cmps_
+            point_t.getChildByName("Kami Cmp").getComponent(cc.Label).string = cmps_k
+            point_t.getChildByName("Toi Cmp").getComponent(cc.Label).string = cmps_t
+            point_t.getChildByName("Simo Cmp").getComponent(cc.Label).string = cmps_s
+
+            //point
+            point_t.getChildByName("Point").getComponent(cc.Label).string = 
+            (Number(self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string) + cmp_).toString()
+            point_t.getChildByName("Kami Point").getComponent(cc.Label).string = 
+            (Number(self.controller.node.getChildByName("Kami Tensu").getComponent(cc.Label).string) + cmp_k).toString()
+            point_t.getChildByName("Toi Point").getComponent(cc.Label).string = 
+            (Number(self.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label).string) + cmp_t).toString()
+            point_t.getChildByName("Simo Point").getComponent(cc.Label).string = 
+            (Number(self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string) + cmp_s).toString()
+
+            point_t.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
+                self.controller.getParent().playSound("click")
+                self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+            })
+            self.controller.node.addChild(point_t)
         })
         this.controller.node.addChild(ryukyoku)
     }
@@ -1442,8 +1857,11 @@ export class Game4 implements Game {
         //todo
         const ryukyoku = cc.instantiate(this.controller.ryukyokuNode)
         ryukyoku.getChildByName("Ryukyoku Label").getComponent(cc.Label).string = type
+        if(kaze !== this.kaze)
+            this.addOtherTehai(kaze, tehai)
         const self = this
         ryukyoku.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
+            self.controller.getParent().playSound("click")
             self.controller.node.removeChild(self.controller.node.getChildByName("Ryukyoku Temp"))
         })
         this.controller.node.addChild(ryukyoku)
@@ -1514,33 +1932,120 @@ export class Game4 implements Game {
         this.controller.node.getChildByName("Test Button").active = true
         const self = this
         this.controller.node.getChildByName("Test Button").once(cc.Node.EventType.TOUCH_END, () => {
+            self.controller.getParent().playSound("click")
             self.controller.getParent().getController().changeNode("game")
         }, this)
     }
 
-    public onNagashiMangan(kazes: kaze_number[], json: string, json2: string): void {
+    public onNagashiMangan(kazes: kaze_number[], json: string, json2: string, point: number[]): void {
         if(kazes.length >= 3){
             this.onRyukyoku("荒牌平局")
             return
         }
         const parsed = JSON.parse(json)
         const parsed2 = JSON.parse(json2)
+        const self = this
+
+        const pf: Function = () => {
+            self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+            const point_t = cc.instantiate(self.controller.pointTemp)
+
+            //name
+            point_t.getChildByName("Name").getComponent(cc.Label).string = self.controller.nameLabel.string
+            point_t.getChildByName("Kami Name").getComponent(cc.Label).string = self.controller.kamiNameLabel.string
+            point_t.getChildByName("Toi Name").getComponent(cc.Label).string = self.controller.toiNameLabel.string
+            point_t.getChildByName("Simo Name").getComponent(cc.Label).string = self.controller.simoNameLabel.string
+
+            //cmp
+            let cmp_ = 0
+            let cmp_k = 0
+            let cmp_t = 0
+            let cmp_s = 0
+            switch(this.kaze){
+                case 0:
+                    cmp_ = point[0]
+                    cmp_k = point[1]
+                    cmp_t = point[2]
+                    cmp_s = point[3]
+                    break
+                case 1:
+                    cmp_ = point[1]
+                    cmp_k = point[2]
+                    cmp_t = point[3]
+                    cmp_s = point[0]
+                    break
+                case 2:
+                    cmp_ = point[2]
+                    cmp_k = point[3]
+                    cmp_t = point[0]
+                    cmp_s = point[1]
+                    break
+                case 3:
+                    cmp_ = point[3]
+                    cmp_k = point[0]
+                    cmp_t = point[1]
+                    cmp_s = point[2]
+                    break
+            }
+            let cmps_ = cmp_.toString()
+            let cmps_k = cmp_k.toString()
+            let cmps_t = cmp_t.toString()
+            let cmps_s = cmp_s.toString()
+            if(cmp_ < 0){
+                cmps_ = "(" + cmps_ + ")"
+            }else{
+                cmps_ = "(+" + cmps_ + ")"
+            }
+            if(cmp_k < 0){
+                cmps_k = "(" + cmps_k + ")"
+            }else{
+                cmps_k = "(+" + cmps_k + ")"
+            }
+            if(cmp_t < 0){
+                cmps_t = "(" + cmps_t + ")"
+            }else{
+                cmps_t = "(+" + cmps_t + ")"
+            }
+            if(cmp_s < 0){
+                cmps_s = "(" + cmps_s + ")"
+            }else{
+                cmps_s = "(+" + cmps_s + ")"
+            }
+            point_t.getChildByName("Cmp").getComponent(cc.Label).string = cmps_
+            point_t.getChildByName("Kami Cmp").getComponent(cc.Label).string = cmps_k
+            point_t.getChildByName("Toi Cmp").getComponent(cc.Label).string = cmps_t
+            point_t.getChildByName("Simo Cmp").getComponent(cc.Label).string = cmps_s
+
+            //point
+            point_t.getChildByName("Point").getComponent(cc.Label).string = 
+            (Number(self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string) + cmp_).toString()
+            point_t.getChildByName("Kami Point").getComponent(cc.Label).string = 
+            (Number(self.controller.node.getChildByName("Kami Tensu").getComponent(cc.Label).string) + cmp_k).toString()
+            point_t.getChildByName("Toi Point").getComponent(cc.Label).string = 
+            (Number(self.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label).string) + cmp_t).toString()
+            point_t.getChildByName("Simo Point").getComponent(cc.Label).string = 
+            (Number(self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string) + cmp_s).toString()
+
+            point_t.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
+                self.controller.getParent().playSound("click")
+                self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
+            })
+            self.controller.node.addChild(point_t)
+        }
+
         if(kazes.length === 2){
             setTimeout(() => {
                 const self = this
                 this.onHora(kazes[0], JSON.stringify(parsed[0]), JSON.stringify(parsed2[0]), false, () => {
                     self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
                     setTimeout(() => {
-                        self.onHora(kazes[1], JSON.stringify(parsed[1]), JSON.stringify(parsed2[1]), false, null, true)
+                        self.onHora(kazes[1], JSON.stringify(parsed[1]), JSON.stringify(parsed2[1]), false, pf, true)
                     }, 500)
                 }, true)
             }, 100)
         }else if(kazes.length === 1){
             setTimeout(() => {
-                const self = this
-                this.onHora(kazes[0], JSON.stringify(parsed[0]), JSON.stringify(parsed2[0]), false, () => {
-                    self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
-                }, true)
+                this.onHora(kazes[0], JSON.stringify(parsed[0]), JSON.stringify(parsed2[0]), false, pf, true)
             }, 100)
         }
     }
@@ -1637,29 +2142,36 @@ export class Game4 implements Game {
             const temp = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
             const self = this
             const hai = new_hai[i]
-            temp.on(cc.Node.EventType.TOUCH_END, () => {
-                if(self.preRichi) return
-                const result = self.controller.getProtocol().emit("dahai", {"protocol": "dahai", "hai": hai})
-                if(result === null) return
-                result.then((bool) => {
-                    if(bool){
-                        self.clearTimer()
-                        if(self.isTsumo){
-                            self.tehai.push(self.tsumohai_cache)
-                            self.isTsumo = false
-                        }
-                        self.tehai.splice(self.tehai.indexOf(hai), 1)
-                        self.updateTehai(self.tehai)
+            if(!this.option.auto_dahai){
+                temp.on(cc.Node.EventType.TOUCH_END, () => {
+                    if(self.preRichi) return
+                    const result = self.controller.getProtocol().emit("dahai", {"protocol": "dahai", "hai": hai})
+                    if(result === null) return
+                    result.then((bool) => {
+                        if(bool){
+                            self.clearTimer()
+                            if(self.isTsumo){
+                                self.tehai.push(self.tsumohai_cache)
+                                self.isTsumo = false
+                            }
+                            self.tehai.splice(self.tehai.indexOf(hai), 1)
+                            self.updateTehai(self.tehai)
 
-                        const s_n = self.getHaiTempNum(hai)
-                        const s_temp = cc.instantiate(self.controller.getPrefabs().HAI_TEMP[s_n])
-                        self.controller.sutehai.addChild(s_temp)
-                        self.dahai_cache["kaze"] = self.kaze
-                        self.dahai_cache["uuid"] = s_temp.uuid
-                        self.dahai_cache["anim"] = cc.repeatForever(cc.sequence(cc.fadeIn(0.5), cc.fadeOut(0.5)))
-                    }
+                            const s_n = self.getHaiTempNum(hai)
+                            const s_temp = cc.instantiate(self.controller.getPrefabs().HAI_TEMP[s_n])
+                            self.controller.sutehai.addChild(s_temp)
+                            self.dahai_cache["kaze"] = self.kaze
+                            self.dahai_cache["uuid"] = s_temp.uuid
+                            self.dahai_cache["anim"] = cc.repeatForever(cc.sequence(cc.fadeIn(0.5), cc.fadeOut(0.5)))
+
+                            const a = Math.floor(Math.random() * 3)
+                            if(a === 0) self.controller.getParent().playSound("dahai1")
+                            else if(a === 1) self.controller.getParent().playSound("dahai2")
+                            else if(a === 2) self.controller.getParent().playSound("dahai3")
+                        }
+                    })
                 })
-            })
+            }
             this.controller.tehai.addChild(temp)
         }
     }
@@ -1682,6 +2194,20 @@ export class Game4 implements Game {
                 else if(cha === "simo") this.controller.simoNakihai.addChild(n_temp)
                 else if(cha === "toi") this.controller.toiNakihai.addChild(n_temp)
             }
+        }
+    }
+
+    private addOtherTehai(kaze: kaze_number, hai: number[]): void{
+        const cha = this.getCha(kaze)
+        let tehai = this.controller.kamiTehai
+        if(cha === "simo") tehai = this.controller.simoTehai
+        else if(cha === "toi") tehai = this.controller.toiTehai
+
+        let new_hai = this.haiSort(hai)
+        for(var i = 0; i <= new_hai.length - 1; i++){
+            const n = this.getHaiTempNum(new_hai[i])
+            const temp = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
+            tehai.addChild(temp)
         }
     }
 

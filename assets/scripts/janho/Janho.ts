@@ -30,18 +30,19 @@ import {Controller} from "./Controller"
 import {Protocol} from "./protocol/Protocol"
 import {GameController} from "./games/GameController"
 import {Game} from "./games/Game"
-import { RoomController } from "./room/RoomController"
+import {RoomController} from "./room/RoomController"
 const {ccclass, property} = cc._decorator
 
 @ccclass
 export default class Janho extends cc.Component {
-    readonly VERSION = "ver 1.0.2"
+    readonly VERSION = "ver 1.1.0"
     
     private controller: Controller
     private socket: Socket
     private network: Protocol
     private prefabs: Prefabs.default
     isConnected: boolean
+    private vol: number = 0.5
 
     @property(cc.Node)
     MAIN_NODE: cc.Node = null
@@ -59,6 +60,48 @@ export default class Janho extends cc.Component {
     @property(cc.Prefab)
     disconnect: cc.Prefab = null
 
+    @property(cc.AudioClip)
+    dahai1: cc.AudioClip = null
+    @property(cc.AudioClip)
+    dahai2: cc.AudioClip = null
+    @property(cc.AudioClip)
+    dahai3: cc.AudioClip = null
+    @property(cc.AudioClip)
+    furo1: cc.AudioClip = null
+    @property(cc.AudioClip)
+    furo2: cc.AudioClip = null
+    @property(cc.AudioClip)
+    furo3: cc.AudioClip = null
+    @property(cc.AudioClip)
+    click: cc.AudioClip = null
+    @property(cc.AudioClip)
+    noti: cc.AudioClip = null
+    @property(cc.AudioClip)
+    horaNoti: cc.AudioClip = null
+    @property(cc.AudioClip)
+    hora: cc.AudioClip = null
+
+    @property(cc.SpriteFrame)
+    Au050: cc.SpriteFrame = null
+    @property(cc.SpriteFrame)
+    Au000: cc.SpriteFrame = null
+    @property(cc.SpriteFrame)
+    Au025: cc.SpriteFrame = null
+    @property(cc.SpriteFrame)
+    Au075: cc.SpriteFrame = null
+
+    @property(cc.SpriteFrame)
+    Au050b: cc.SpriteFrame = null
+    @property(cc.SpriteFrame)
+    Au000b: cc.SpriteFrame = null
+    @property(cc.SpriteFrame)
+    Au025b: cc.SpriteFrame = null
+    @property(cc.SpriteFrame)
+    Au075b: cc.SpriteFrame = null
+
+    @property(cc.Node)
+    audio: cc.Node = null
+
     public onLoad(){
         this.isConnected = false
         this.prefabs = this.PREFABS.getComponent("Prefabs")
@@ -71,6 +114,10 @@ export default class Janho extends cc.Component {
         const self = this
         this.MAIN_NODE.on(cc.Node.EventType.TOUCH_START, function (event: any) { 
             self.createParticleme(event)
+        }, this.node)
+
+        this.audio.on(cc.Node.EventType.TOUCH_END, function () {
+            self.changeVol()
         }, this.node)
     }
 
@@ -140,5 +187,88 @@ export default class Janho extends cc.Component {
             location.reload()
         }, this.node)
         this.node.addChild(dis)
+    }
+
+    public playSound(sound: string): void{
+        let clip = null
+        
+        switch(sound){
+            case "dahai1":
+                clip = this.dahai1
+                break
+            case "dahai2":
+                clip = this.dahai2
+                break
+            case "dahai3":
+                clip = this.dahai3
+                break
+            case "furo1":
+                clip = this.furo1
+                break
+            case "furo2":
+                clip = this.furo2
+                break
+            case "furo3":
+                clip = this.furo3
+                break
+            case "click":
+                clip = this.click
+                break
+            case "noti":
+                clip = this.noti
+                break
+            case "horaNoti":
+                clip = this.horaNoti
+                break
+            case "hora":
+                clip = this.hora
+                break
+        }
+
+        if(clip !== null){
+            const as = new cc.AudioSource()
+            as.volume = this.vol
+            as.clip = clip
+            as.play()
+        }
+    }
+
+    public changeVol(colOnly = false): void{
+        let BW = "white"
+        if(this.getController().getStatus() === "title") BW = "black" 
+
+        if(colOnly){
+            if(this.vol === 0.25){
+                if(BW === "black") this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au025b
+                else this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au025
+            }else if(this.vol === 0.0){
+                if(BW === "black") this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au000b
+                else this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au000
+            }else if(this.vol === 0.75){
+                if(BW === "black") this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au075b
+                else this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au075
+            }else if(this.vol === 0.5){
+                if(BW === "black") this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au050b
+                else this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au050
+            }
+        }else{
+            if(this.vol === 0.5){
+                this.vol = 0.25
+                if(BW === "black") this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au025b
+                else this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au025
+            }else if(this.vol === 0.25){
+                this.vol = 0.0
+                if(BW === "black") this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au000b
+                else this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au000
+            }else if(this.vol === 0.0){
+                this.vol = 0.75
+                if(BW === "black") this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au075b
+                else this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au075
+            }else if(this.vol === 0.75){
+                this.vol = 0.5
+                if(BW === "black") this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au050b
+                else this.node.getChildByName("Audio Node").getComponent(cc.Sprite).spriteFrame = this.Au050
+            }
+        }
     }
 }

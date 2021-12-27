@@ -50,7 +50,7 @@ export class Ryukyoku implements JanhoProtocol {
                         const game = this.parent.getGame()
                         if(parsed["type"] === "三家和") return
                         if("tehais" in parsed){
-                            if(game !== null) game.onRyukyoku(parsed["type"], parsed["tehais"])
+                            if(game !== null) game.onRyukyoku(parsed["type"], parsed["tehais"], parsed["point"])
                         }
                     }
                 }
