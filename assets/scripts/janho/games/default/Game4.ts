@@ -23,7 +23,6 @@
  * 
  */
 
-//ポンの牌向き修正できてない
 import {Mangan} from "../../utils/Mangan";
 import {kaze_number, ryukyoku} from "../../utils/Types";
 import {Game} from "../Game"
@@ -261,6 +260,10 @@ export class Game4 implements Game {
                         const temp = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
                         this.controller.sutehai.addChild(temp)
                     }
+                    const a = Math.floor(Math.random() * 3)
+                    if(a === 0) this.controller.getParent().playSound("dahai1")
+                    else if(a === 1) this.controller.getParent().playSound("dahai2")
+                    else if(a === 2) this.controller.getParent().playSound("dahai3")
                 }
             }else if(parsed["protocol"] === "skip"){
                 this.clearButton()
@@ -505,64 +508,142 @@ export class Game4 implements Game {
                         self.controller.getParent().playSound("click")
                         const old_id = self.timer_id
                         self.clearButton()
-                        const hai: number = parsed["pon"]["hai"][0]
-                        const result = self.controller.getProtocol().emit("pon", {"protocol": "pon", "hai": hai, "combi": [hai,hai,hai]})
-                        if(result === null) return
-                        result.then((bool) => {
-                            if(bool){
-                                self.controller.logoNode.opacity = 0
-                                const logo = cc.instantiate(self.controller.ponLogo)
-                                self.controller.logoNode.addChild(logo)
-                                self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
-                                const clear = () => {
-                                    self.controller.logoNode.removeAllChildren()
-                                }
-                                setTimeout(clear, 2000)
 
-                                const kz = self.getCha(parsed["pon"]["from"])
-                                if(kz === "kami"){
-                                    const c = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                    self.controller.kamiSutehai.removeChild(c)
-                                }else if(kz === "simo"){
-                                    const c = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                    self.controller.simoSutehai.removeChild(c)
-                                }else if(kz === "toi"){
-                                    const c = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                    self.controller.toiSutehai.removeChild(c)
+                        const combi: number[][] = parsed["pon"]["combi"].slice()
+                        if(combi.length > 1){
+                            //選択肢を出して
+                            const chiNode = cc.instantiate(self.controller.chiNode)
+                            for(let c of combi){
+                                const chiCombi = cc.instantiate(self.controller.chiCombiNode)
+                                let d: number[] = c.slice()
+                                d.splice(d.indexOf(parsed["pon"]["hai"][0]), 1)
+                                for(let h of d){
+                                    const n = this.getHaiTempNum(h)
+                                    const hai = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
+                                    chiCombi.addChild(hai)
                                 }
-
-                                if(old_id === self.timer_id) self.clearTimer()
-                                let combi = [hai,hai,hai]
-                                if(kz === "kami") combi[2] = combi[2] + 1
-                                else if(kz === "simo") combi[0] = combi[0] + 3
-                                else if(kz === "toi") combi[1] = combi[1] + 2
-                                self.furo[self.kaze].push(combi)
-                                self.tehai.splice(self.tehai.indexOf(hai), 1)
-                                self.tehai.splice(self.tehai.indexOf(hai), 1)
-                                self.updateTehai(self.tehai)
-                                self.updateNakihai(self.furo[self.kaze], self.kaze)
-
-                                const a = Math.floor(Math.random() * 3)
-                                if(a === 0) self.controller.getParent().playSound("furo1")
-                                else if(a === 1) self.controller.getParent().playSound("furo2")
-                                else if(a === 2) self.controller.getParent().playSound("furo3")
-                            }else{
-                                if(kz === "kami"){
-                                    const d_hai = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                    d_hai.stopAction(self.dahai_cache["anim"])
-                                    d_hai.opacity = 255
-                                }else if(kz === "simo"){
-                                    const d_hai = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                    d_hai.stopAction(self.dahai_cache["anim"])
-                                    d_hai.opacity = 255
-                                }else if(kz === "toi"){
-                                    const d_hai = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
-                                    d_hai.stopAction(self.dahai_cache["anim"])
-                                    d_hai.opacity = 255
-                                }
-                                self.clearTimer()
+                                chiCombi.once(cc.Node.EventType.TOUCH_END, () => {
+                                    excutePon(c)
+                                })
+                                chiNode.getChildByName("Hai Node").addChild(chiCombi)
                             }
-                        })
+                            self.controller.node.addChild(chiNode)
+                            clearAnim()
+                        }else{
+                            excutePon()
+                        }
+
+                        function excutePon(option: number[] = []){
+                            const hai: number = parsed["pon"]["hai"][0]
+                            let result: Promise<boolean>
+                            if(option.length !== 0){
+                                result = self.controller.getProtocol().emit("pon", {"protocol": "pon", "hai": hai, "combi": option})
+                            }else{
+                                result = self.controller.getProtocol().emit("pon", {"protocol": "pon", "hai": hai, "combi": parsed["pon"]["combi"][0]})
+                            }
+                            if(result === null) return
+                            result.then((bool) => {
+                                if(bool){
+                                    self.controller.logoNode.opacity = 0
+                                    const logo = cc.instantiate(self.controller.ponLogo)
+                                    self.controller.logoNode.addChild(logo)
+                                    self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
+                                    const clear = () => {
+                                        self.controller.logoNode.removeAllChildren()
+                                    }
+                                    setTimeout(clear, 2000)
+
+                                    const kz = self.getCha(parsed["pon"]["from"])
+                                    if(kz === "kami"){
+                                        const c = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                        self.controller.kamiSutehai.removeChild(c)
+                                    }else if(kz === "simo"){
+                                        const c = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                        self.controller.simoSutehai.removeChild(c)
+                                    }else if(kz === "toi"){
+                                        const c = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                        self.controller.toiSutehai.removeChild(c)
+                                    }
+
+                                    if(old_id === self.timer_id) self.clearTimer()
+                                    if(option.length !== 0){
+                                        let combi_d = option.slice()
+                                        combi_d.splice(combi_d.indexOf(hai), 1)
+                                        self.tehai.splice(self.tehai.indexOf(combi_d[0]), 1)
+                                        self.tehai.splice(self.tehai.indexOf(combi_d[1]), 1)
+
+                                        let i = 0
+                                        for(let h of option){
+                                            if(h === hai){
+                                                break
+                                            }
+                                            i++
+                                        }
+
+                                        let j = 0
+                                        if(kz === "kami") j = 1
+                                        else if(kz === "simo") j = 3
+                                        else if(kz === "toi") j = 2
+
+                                        let opti = option.slice()
+                                        if(i === 0) opti[0] = opti[0] + j
+                                        else if(i === 1) opti[1] = opti[1] + j
+                                        else if(i === 2) opti[2] = opti[2] + j
+                                        self.furo[self.kaze].push(self.reChi(opti))
+                                    }else{
+                                        let combi = parsed["pon"]["combi"][0].slice()
+                                        let combi_d = parsed["pon"]["combi"][0].slice()
+                                        combi_d.splice(combi_d.indexOf(hai), 1)
+                                        self.tehai.splice(self.tehai.indexOf(combi_d[0]), 1)
+                                        self.tehai.splice(self.tehai.indexOf(combi_d[1]), 1)
+
+                                        let i = 0
+                                        for(let h of combi){
+                                            if(h === hai){
+                                                break
+                                            }
+                                            i++
+                                        }
+
+                                        let j = 0
+                                        if(kz === "kami") j = 1
+                                        else if(kz === "simo") j = 3
+                                        else if(kz === "toi") j = 2
+
+                                        if(i === 0) combi[0] = combi[0] + j
+                                        else if(i === 1) combi[1] = combi[1] + j
+                                        else if(i === 2) combi[2] = combi[2] + j
+                                        self.furo[self.kaze].push(self.reChi(combi))
+                                    }
+                                    self.updateTehai(self.tehai)
+                                    self.updateNakihai(self.furo[self.kaze], self.kaze)
+
+                                    const a = Math.floor(Math.random() * 3)
+                                    if(a === 0) self.controller.getParent().playSound("furo1")
+                                    else if(a === 1) self.controller.getParent().playSound("furo2")
+                                    else if(a === 2) self.controller.getParent().playSound("furo3")
+                                }else{
+                                    clearAnim()
+                                    self.clearTimer()
+                                }
+                            })
+                        }
+
+                        function clearAnim(){
+                            if(kz === "kami"){
+                                const d_hai = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                d_hai.stopAction(self.dahai_cache["anim"])
+                                d_hai.opacity = 255
+                            }else if(kz === "simo"){
+                                const d_hai = self.controller.simoSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                d_hai.stopAction(self.dahai_cache["anim"])
+                                d_hai.opacity = 255
+                            }else if(kz === "toi"){
+                                const d_hai = self.controller.toiSutehai.getChildByUuid(self.dahai_cache["uuid"])
+                                d_hai.stopAction(self.dahai_cache["anim"])
+                                d_hai.opacity = 255
+                            }
+                        }
                     }, this)
                 }
             }
@@ -590,7 +671,7 @@ export class Game4 implements Game {
                         const old_id = self.timer_id
                         self.clearButton()
                         const hai: number = parsed["kan"]["hai"][0]
-                        const result = self.controller.getProtocol().emit("kan", {"protocol": "kan", "hai": hai, "combi": [hai,hai,hai,hai]})
+                        const result = self.controller.getProtocol().emit("kan", {"protocol": "kan", "hai": hai, "combi": parsed["kan"]["combi"][0]})
                         if(result === null) return
                         result.then((bool) => {
                             if(bool){
@@ -603,7 +684,7 @@ export class Game4 implements Game {
                                 }
                                 setTimeout(clear, 2000)
 
-                                const kz = self.getCha(parsed["pon"]["from"])
+                                const kz = self.getCha(parsed["kan"]["from"])
                                 if(kz === "kami"){
                                     const c = self.controller.kamiSutehai.getChildByUuid(self.dahai_cache["uuid"])
                                     self.controller.kamiSutehai.removeChild(c)
@@ -616,14 +697,16 @@ export class Game4 implements Game {
                                 }
 
                                 if(old_id === self.timer_id) self.clearTimer()
-                                let combi = [hai,hai,hai,hai]
+                                let combi: number[] = parsed["kan"]["combi"][0].slice()
+                                let combi_d: number[] = parsed["kan"]["combi"][0].slice()
                                 if(kz === "kami") combi[3] = combi[3] + 1
                                 else if(kz === "simo") combi[0] = combi[0] + 3
                                 else if(kz === "toi") combi[1] = combi[1] + 2
-                                self.furo[self.kaze].push(combi)
-                                self.tehai.splice(self.tehai.indexOf(hai), 1)
-                                self.tehai.splice(self.tehai.indexOf(hai), 1)
-                                self.tehai.splice(self.tehai.indexOf(hai), 1)
+                                self.furo[self.kaze].push(self.reChi(combi))
+                                combi_d.splice(combi_d.indexOf(hai), 1)
+                                self.tehai.splice(self.tehai.indexOf(combi_d[0]), 1)
+                                self.tehai.splice(self.tehai.indexOf(combi_d[1]), 1)
+                                self.tehai.splice(self.tehai.indexOf(combi_d[2]), 1)
                                 self.updateTehai(self.tehai)
                                 self.updateNakihai(self.furo[self.kaze], self.kaze)
 
@@ -662,7 +745,7 @@ export class Game4 implements Game {
                         const old_id = self.timer_id
                         self.clearButton()
                         const hai: number = parsed["ankan"]["hai"][0]
-                        const result = self.controller.getProtocol().emit("ankan", {"protocol": "ankan", "hai": hai, "combi": [hai,hai,hai,hai]})
+                        const result = self.controller.getProtocol().emit("ankan", {"protocol": "ankan", "hai": hai, "combi": parsed["ankan"]["combi"][0]})
                         if(result === null) return
                         result.then((bool) => {
                             if(bool){
@@ -676,10 +759,13 @@ export class Game4 implements Game {
                                 setTimeout(clear, 2000)
 
                                 if(old_id === self.timer_id) self.clearTimer()
-                                self.furo[self.kaze].push([500,hai,hai,500])
-                                self.tehai.splice(self.tehai.indexOf(hai), 1)
-                                self.tehai.splice(self.tehai.indexOf(hai), 1)
-                                self.tehai.splice(self.tehai.indexOf(hai), 1)
+                                let combi = parsed["ankan"]["combi"][0].slice()
+                                let combi_d: number[] = parsed["ankan"]["combi"][0].slice()
+                                self.furo[self.kaze].push([500,combi[0],combi[1],500])
+                                combi_d.splice(combi_d.indexOf(hai), 1)
+                                self.tehai.splice(self.tehai.indexOf(combi_d[0]), 1)
+                                self.tehai.splice(self.tehai.indexOf(combi_d[1]), 1)
+                                self.tehai.splice(self.tehai.indexOf(combi_d[2]), 1)
                                 self.updateTehai(self.tehai)
                                 self.updateNakihai(self.furo[self.kaze], self.kaze)
 
@@ -705,7 +791,7 @@ export class Game4 implements Game {
                         const old_id = self.timer_id
                         self.clearButton()
                         const hai: number = parsed["kakan"]["hai"][0]
-                        const result = self.controller.getProtocol().emit("kakan", {"protocol": "kakan", "hai": hai, "combi": [hai,hai,hai,hai]})
+                        const result = self.controller.getProtocol().emit("kakan", {"protocol": "kakan", "hai": hai, "combi": parsed["kakan"]["combi"][0]})
                         if(result === null) return
                         result.then((bool) => {
                             if(bool){
@@ -719,8 +805,11 @@ export class Game4 implements Game {
                                 setTimeout(clear, 2000)
 
                                 if(old_id === self.timer_id) self.clearTimer()
-                                self.furo[self.kaze].splice(self.furo[self.kaze].indexOf([hai,hai,hai]), 1)
-                                self.furo[self.kaze].push([hai,hai,hai,hai])//これだと最後尾に入れることになる
+                                let combi: number[] = parsed["kakan"]["combi"][0].slice()
+                                let combi_d: number[] = parsed["kakan"]["combi"][0].slice()
+                                combi_d.splice(combi_d.indexOf(hai), 1)
+                                self.furo[self.kaze].splice(self.furo[self.kaze].indexOf(combi_d), 1)
+                                self.furo[self.kaze].push(self.reChi(combi))//これだと最後尾に入れることになる
                                 self.updateNakihai(self.furo[self.kaze], self.kaze)
 
                                 const a = Math.floor(Math.random() * 3)
@@ -878,6 +967,9 @@ export class Game4 implements Game {
                                                 const lb = self.controller.doraNode.getChildByName("Richi num Label").getComponent(cc.Label)
                                                 lb.string = (Number(lb.string) + 1).toString()
 
+                                                const pt = Number(self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string) - 1000
+                                                self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string = pt.toString()
+
                                                 //牌を捨てて河に横向きで設置
                                                 self.clearTimer()
                                                 const s_n = self.getHaiTempNum(Number(c.name))
@@ -912,9 +1004,21 @@ export class Game4 implements Game {
                                 if(result === null) return
                                 result.then((bool) => {
                                     if(bool){
+                                        self.controller.logoNode.opacity = 0
+                                        const logo = cc.instantiate(self.getRichiLogo())
+                                        self.controller.logoNode.addChild(logo)
+                                        self.controller.logoNode.runAction(cc.sequence(cc.fadeIn(0.1), cc.delayTime(1.8), cc.fadeOut(0.1)))
+                                        const clear = () => {
+                                            self.controller.logoNode.removeAllChildren()
+                                        }
+                                        setTimeout(clear, 2000)
+                                        
                                         self.controller.tenbou.active = true
                                         const lb = self.controller.doraNode.getChildByName("Richi num Label").getComponent(cc.Label)
                                         lb.string = (Number(lb.string) + 1).toString()
+
+                                        const pt = Number(self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string) - 1000
+                                        self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string = pt.toString()
 
                                         //牌を捨てて河に横向きで設置
                                         self.clearTimer()
@@ -1104,7 +1208,7 @@ export class Game4 implements Game {
             this.updateTehai(this.tehai)
         }
 
-        this.furo[kaze].push(combi)
+        this.furo[kaze].push(this.reChi(combi))
         this.updateNakihai(this.furo[kaze], kaze)
 
         const a = Math.floor(Math.random() * 3)
@@ -1175,7 +1279,7 @@ export class Game4 implements Game {
             this.updateTehai(this.tehai)
         }
 
-        this.furo[kaze].push(combi)
+        this.furo[kaze].push(this.reChi(combi))
         this.updateNakihai(this.furo[kaze], kaze)
 
         const a = Math.floor(Math.random() * 3)
@@ -1280,7 +1384,7 @@ export class Game4 implements Game {
             else if(a === 2) this.controller.getParent().playSound("furo3")
         }
 
-        this.furo[kaze].push(combi)
+        this.furo[kaze].push(this.reChi(combi))
         this.updateNakihai(this.furo[kaze], kaze)
     }
 
@@ -1357,7 +1461,7 @@ export class Game4 implements Game {
                 yakuLbl.addChild(lbl)
             }
 
-            const mangan = Mangan.getString(parsed["fu"], parsed["han"], yakuman)
+            const mangan = Mangan.getString(parsed["fu"], parsed["hansu"], yakuman)
             const logoNode1 = result.getChildByName("Logo Node 1")
             const logoNode2 = result.getChildByName("Logo Node 2")
             switch(mangan){
@@ -1503,6 +1607,12 @@ export class Game4 implements Game {
                 point_t.getChildByName("Simo Point").getComponent(cc.Label).string = 
                 (Number(self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string) + cmp_s).toString()
 
+                //point2
+                self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string = point_t.getChildByName("Point").getComponent(cc.Label).string
+                self.controller.node.getChildByName("Kami Tensu").getComponent(cc.Label).string = point_t.getChildByName("Kami Point").getComponent(cc.Label).string
+                self.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label).string = point_t.getChildByName("Toi Point").getComponent(cc.Label).string
+                self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string = point_t.getChildByName("Simo Point").getComponent(cc.Label).string
+
                 point_t.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
                     self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
                 })
@@ -1624,6 +1734,12 @@ export class Game4 implements Game {
                         point_t.getChildByName("Simo Point").getComponent(cc.Label).string = 
                         (Number(self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string) + cmp_s).toString()
 
+                        //point2
+                        self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string = point_t.getChildByName("Point").getComponent(cc.Label).string
+                        self.controller.node.getChildByName("Kami Tensu").getComponent(cc.Label).string = point_t.getChildByName("Kami Point").getComponent(cc.Label).string
+                        self.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label).string = point_t.getChildByName("Toi Point").getComponent(cc.Label).string
+                        self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string = point_t.getChildByName("Simo Point").getComponent(cc.Label).string
+
                         point_t.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
                             self.controller.getParent().playSound("click")
                             self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
@@ -1718,6 +1834,8 @@ export class Game4 implements Game {
                 this.controller.kamiLogoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+            const pt = Number(this.controller.node.getChildByName("Kami Tensu").getComponent(cc.Label).string) - 1000
+            this.controller.node.getChildByName("Kami Tensu").getComponent(cc.Label).string = pt.toString()
         }else if(k === "simo"){
             this.controller.simoLogoNode.opacity = 0
             const logo = cc.instantiate(this.getRichiLogo())
@@ -1727,6 +1845,8 @@ export class Game4 implements Game {
                 this.controller.simoLogoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+            const pt = Number(this.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string) - 1000
+            this.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string = pt.toString()
         }else if(k === "toi"){
             this.controller.toiLogoNode.opacity = 0
             const logo = cc.instantiate(this.getRichiLogo())
@@ -1736,6 +1856,8 @@ export class Game4 implements Game {
                 this.controller.toiLogoNode.removeAllChildren()
             }
             setTimeout(clear, 2000)
+            const pt = Number(this.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label)) - 1000
+            this.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label).string = pt.toString()
         }
         this.onDahai(richiHai, kaze, true)
     }
@@ -1844,6 +1966,12 @@ export class Game4 implements Game {
             point_t.getChildByName("Simo Point").getComponent(cc.Label).string = 
             (Number(self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string) + cmp_s).toString()
 
+            //point2
+            self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string = point_t.getChildByName("Point").getComponent(cc.Label).string
+            self.controller.node.getChildByName("Kami Tensu").getComponent(cc.Label).string = point_t.getChildByName("Kami Point").getComponent(cc.Label).string
+            self.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label).string = point_t.getChildByName("Toi Point").getComponent(cc.Label).string
+            self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string = point_t.getChildByName("Simo Point").getComponent(cc.Label).string
+
             point_t.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
                 self.controller.getParent().playSound("click")
                 self.controller.node.removeChild(self.controller.node.getChildByName("Result Temp"))
@@ -1854,7 +1982,6 @@ export class Game4 implements Game {
     }
 
     public onRyukyokuByPlayer(kaze: kaze_number, type: ryukyoku, tehai: number[]){
-        //todo
         const ryukyoku = cc.instantiate(this.controller.ryukyokuNode)
         ryukyoku.getChildByName("Ryukyoku Label").getComponent(cc.Label).string = type
         if(kaze !== this.kaze)
@@ -2025,6 +2152,12 @@ export class Game4 implements Game {
             (Number(self.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label).string) + cmp_t).toString()
             point_t.getChildByName("Simo Point").getComponent(cc.Label).string = 
             (Number(self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string) + cmp_s).toString()
+
+            //point2
+            self.controller.node.getChildByName("Tensu").getComponent(cc.Label).string = point_t.getChildByName("Point").getComponent(cc.Label).string
+            self.controller.node.getChildByName("Kami Tensu").getComponent(cc.Label).string = point_t.getChildByName("Kami Point").getComponent(cc.Label).string
+            self.controller.node.getChildByName("Toi Tensu").getComponent(cc.Label).string = point_t.getChildByName("Toi Point").getComponent(cc.Label).string
+            self.controller.node.getChildByName("Simo Tensu").getComponent(cc.Label).string = point_t.getChildByName("Simo Point").getComponent(cc.Label).string
 
             point_t.getChildByName("Close Button").once(cc.Node.EventType.TOUCH_END, () => {
                 self.controller.getParent().playSound("click")
@@ -2220,55 +2353,132 @@ export class Game4 implements Game {
             index++ 
         }
         let j: number
-        const c0 = re[0]
-        const c1 = re[1]
-        const c2 = re[2]
-        switch(index){
-            //+--
-            case 0:
-                j = Math.floor(re[0] / 1) % 10
-                //上家
-                if(j === 1){
-                    re[0] = c1
-                    re[1] = c2
-                    re[2] = c0
-                //対面
-                }else if(j === 2){
-                    re[0] = c1
-                    re[1] = c0
-                    re[2] = c2
-                }
-                break
-            //-+-
-            case 1:
-                j = Math.floor(re[1] / 1) % 10
-                //上家
-                if(j === 1){
-                    re[0] = c0
-                    re[1] = c2
-                    re[2] = c1
-                //下家
-                }else if(j === 3){
-                    re[0] = c1
-                    re[1] = c0
-                    re[2] = c2
-                }
-                break
-            //--+
-            case 2:
-                j = Math.floor(re[2] / 1) % 10
-                //下家
-                if(j === 3){
-                    re[0] = c2
-                    re[1] = c0
-                    re[2] = c1
-                //対面
-                }else if(j === 2){
-                    re[0] = c0
-                    re[1] = c2
-                    re[2] = c1
-                }
-                break
+        if(hai.length === 3){
+            const c0 = re[0]
+            const c1 = re[1]
+            const c2 = re[2]
+            switch(index){
+                //+--
+                case 0:
+                    j = Math.floor(re[0] / 1) % 10
+                    //上家
+                    if(j === 1){
+                        re[0] = c1
+                        re[1] = c2
+                        re[2] = c0
+                    //対面
+                    }else if(j === 2){
+                        re[0] = c1
+                        re[1] = c0
+                        re[2] = c2
+                    }
+                    break
+                //-+-
+                case 1:
+                    j = Math.floor(re[1] / 1) % 10
+                    //上家
+                    if(j === 1){
+                        re[0] = c0
+                        re[1] = c2
+                        re[2] = c1
+                    //下家
+                    }else if(j === 3){
+                        re[0] = c1
+                        re[1] = c0
+                        re[2] = c2
+                    }
+                    break
+                //--+
+                case 2:
+                    j = Math.floor(re[2] / 1) % 10
+                    //下家
+                    if(j === 3){
+                        re[0] = c2
+                        re[1] = c0
+                        re[2] = c1
+                    //対面
+                    }else if(j === 2){
+                        re[0] = c0
+                        re[1] = c2
+                        re[2] = c1
+                    }
+                    break
+            }
+        }else if(hai.length === 4){
+            const c0 = re[0]
+            const c1 = re[1]
+            const c2 = re[2]
+            const c3 = re[3]
+            switch(index){
+                //+---
+                case 0:
+                    j = Math.floor(re[0] / 1) % 10
+                    //上家
+                    if(j === 1){
+                        re[0] = c1
+                        re[1] = c2
+                        re[2] = c3
+                        re[3] = c0
+                    //対面
+                    }else if(j === 2){
+                        re[0] = c1
+                        re[1] = c0
+                        re[2] = c2
+                        re[3] = c3
+                    }
+                    break
+                //-+--
+                case 1:
+                    j = Math.floor(re[1] / 1) % 10
+                    //上家
+                    if(j === 1){
+                        re[0] = c0
+                        re[1] = c3
+                        re[2] = c2
+                        re[3] = c1
+                    //下家
+                    }else if(j === 3){
+                        re[0] = c1
+                        re[1] = c0
+                        re[2] = c3
+                        re[3] = c2
+                    }
+                    break
+                //--+-
+                case 2:
+                    j = Math.floor(re[2] / 1) % 10
+                    //下家
+                    if(j === 3){
+                        re[0] = c2
+                        re[1] = c3
+                        re[2] = c0
+                        re[3] = c1
+                    //対面
+                    }else if(j === 2){
+                        re[0] = c0
+                        re[1] = c2
+                        re[2] = c3
+                        re[3] = c1
+                    }
+                    break
+                //---+
+                case 3:
+                    j = Math.floor(re[3] / 1) % 10
+                    //下家
+                    if(j === 3){
+                        re[0] = c3
+                        re[1] = c0
+                        re[2] = c1
+                        re[3] = c2
+                    //対面
+                    }else if(j === 2){
+                        re[0] = c0
+                        re[1] = c3
+                        re[2] = c2
+                        re[3] = c1
+                    }
+                    break
+            }
         }
         return re
     }
