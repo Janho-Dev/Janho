@@ -140,7 +140,7 @@ export class GameController extends cc.Component {
     @property(cc.Prefab) pointTemp: cc.Prefab = null
 
     @property(cc.SpriteFrame) greenBack: cc.SpriteFrame = null
-    @property(cc.SpriteFrame) blackBack: cc.SpriteFrame = null
+    @property(cc.SpriteFrame) purpleBack: cc.SpriteFrame = null
     @property(cc.SpriteFrame) blueBack: cc.SpriteFrame = null
 
     @property
@@ -186,7 +186,7 @@ export class GameController extends cc.Component {
                     self.node.getChildByName("Background").getComponent(cc.Sprite).spriteFrame = self.blueBack
                 }else if(self.back === "blue"){
                     self.back = "black"
-                    self.node.getChildByName("Background").getComponent(cc.Sprite).spriteFrame = self.blackBack
+                    self.node.getChildByName("Background").getComponent(cc.Sprite).spriteFrame = self.purpleBack
                 }else{
                     self.back = "green"
                     self.node.getChildByName("Background").getComponent(cc.Sprite).spriteFrame = self.greenBack

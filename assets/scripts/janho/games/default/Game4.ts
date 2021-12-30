@@ -2263,14 +2263,34 @@ export class Game4 implements Game {
     }
 
     private haiSort(hai: number[]): number[]{
-        return hai.sort((a,b) => {return a - b})
+        let c_hai = hai.slice()
+        let red = [false,false,false]
+        let red_h = []
+        for(let i = 0; i < c_hai.length; i++){
+            let n = Math.floor(c_hai[i] / 10) % 10
+            let l = Math.floor(c_hai[i] / 100) % 10
+            if(n === 0){
+                red[l-1] = true
+                red_h[l] = c_hai[i]
+                c_hai[i] = c_hai[i] + 50
+            }
+        }
+        let sorted = c_hai.sort((a,b) => {return a - b})
+        for(let j = 0; j < 3; j++){
+            if(red[j]){
+                sorted.splice(sorted.indexOf(red_h[j+1] + 50), 1, red_h[j+1])
+            }
+        }
+        console.log(sorted)
+        return sorted
     }
 
     private updateTehai(hai: number[]): void{
         let new_hai = this.haiSort(hai)
         this.clearTehai()
         this.preRichi = false
-        for(var i = 0; i <= new_hai.length - 1; i++){
+
+        for(let i = 0; i <= new_hai.length - 1; i++){
             const n = this.getHaiTempNum(new_hai[i])
             const temp = cc.instantiate(this.controller.getPrefabs().HAI_TEMP[n])
             const self = this
