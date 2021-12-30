@@ -34,6 +34,7 @@ export class Controller {
     private readonly node: cc.Node
     private readonly prefabs: Prefabs
     private status: Types.janho_node
+    private name: string = null
 
     constructor(parent: Janho, node: cc.Node, prefabs: Prefabs){
         this.parent = parent
@@ -89,52 +90,87 @@ export class Controller {
         this.node.removeAllChildren()
         const home = cc.instantiate(this.prefabs.HOME_TEMP)
         const self = this
+        if(this.name !== null){
+            home.getChildByName("User EBox").getComponent(cc.EditBox).placeholder = this.name
+            home.getChildByName("User EBox").getChildByName("TEXT_LABEL").getComponent(cc.Label).enabled = false
+            home.getChildByName("User EBox").getComponent(cc.EditBox).enabled = false
+        }
         home.getChildByName("Game4 Button").on(cc.Node.EventType.TOUCH_END, () => {
             self.parent.playSound("click")
-            const userId = home.getChildByName("User EBox").getComponent(cc.EditBox).string
-            const roomId = home.getChildByName("Room EBox").getComponent(cc.EditBox).string
-            if(userId === "" || roomId === "") return
-            const register = self.parent.getProtocol().emit("register", {"protocol": "register", "name": userId})
-            if(register === null) return
-            register.then((bool) => {
-                if(!bool){
-                    const err = cc.instantiate(self.prefabs.TITLE_ERROR)
-                    const old = home.getChildByName("Title Error Temp")
-                    if(old !== null){
-                        home.removeChild(old)
-                    }
-                    err.getChildByName("Error Label").getComponent(cc.Label).string = "Error: 名前を登録できませんでした"
-                    err.getChildByName("Error Label").color = new cc.Color(255, 255, 255)
-                    home.addChild(err)
-                    return
-                }
-                else {
-                    const joinRoom = self.parent.getProtocol().emit("joinRoom", {"protocol": "joinRoom", "roomId": roomId})
-                    if(joinRoom === null) return
-                    joinRoom.then((bool) => {
-                        if(bool){
-                            self.changeNode("room")
-                        }else{
-                            const createRoom = self.parent.getProtocol().emit("createRoom", {"protocol": "createRoom", "roomId": roomId})
-                            if(createRoom === null) return
-                            createRoom.then((bool) => {
-                                if(!bool){
-                                    const err = cc.instantiate(self.prefabs.TITLE_ERROR)
-                                    const old = home.getChildByName("Title Error Temp")
-                                    if(old !== null){
-                                        home.removeChild(old)
-                                    }
-                                    err.getChildByName("Error Label").getComponent(cc.Label).string = "Error: 部屋に参加できませんでした"
-                                    err.getChildByName("Error Label").color = new cc.Color(255, 255, 255)
-                                    home.addChild(err)
-                                    return
-                                }
-                                self.changeNode("room")
-                            })
+            if(this.name === null){
+                const userId = home.getChildByName("User EBox").getComponent(cc.EditBox).string
+                const roomId = home.getChildByName("Room EBox").getComponent(cc.EditBox).string
+                if(userId === "" || roomId === "") return
+                const register = self.parent.getProtocol().emit("register", {"protocol": "register", "name": userId})
+                if(register === null) return
+                register.then((bool) => {
+                    if(!bool){
+                        const err = cc.instantiate(self.prefabs.TITLE_ERROR)
+                        const old = home.getChildByName("Title Error Temp")
+                        if(old !== null){
+                            home.removeChild(old)
                         }
-                    })
-                }
-            })
+                        err.getChildByName("Error Label").getComponent(cc.Label).string = "Error: 名前を登録できませんでした"
+                        err.getChildByName("Error Label").color = new cc.Color(255, 255, 255)
+                        home.addChild(err)
+                        return
+                    }
+                    else {
+                        self.name = userId
+                        const joinRoom = self.parent.getProtocol().emit("joinRoom", {"protocol": "joinRoom", "roomId": roomId})
+                        if(joinRoom === null) return
+                        joinRoom.then((bool) => {
+                            if(bool){
+                                self.changeNode("room")
+                            }else{
+                                const createRoom = self.parent.getProtocol().emit("createRoom", {"protocol": "createRoom", "roomId": roomId})
+                                if(createRoom === null) return
+                                createRoom.then((bool) => {
+                                    if(!bool){
+                                        const err = cc.instantiate(self.prefabs.TITLE_ERROR)
+                                        const old = home.getChildByName("Title Error Temp")
+                                        if(old !== null){
+                                            home.removeChild(old)
+                                        }
+                                        err.getChildByName("Error Label").getComponent(cc.Label).string = "Error: 部屋に参加できませんでした"
+                                        err.getChildByName("Error Label").color = new cc.Color(255, 255, 255)
+                                        home.addChild(err)
+                                        return
+                                    }
+                                    self.changeNode("room")
+                                })
+                            }
+                        })
+                    }
+                })
+            }else{
+                const roomId = home.getChildByName("Room EBox").getComponent(cc.EditBox).string
+                if(roomId === "") return
+                const joinRoom = self.parent.getProtocol().emit("joinRoom", {"protocol": "joinRoom", "roomId": roomId})
+                if(joinRoom === null) return
+                joinRoom.then((bool) => {
+                    if(bool){
+                        self.changeNode("room")
+                    }else{
+                        const createRoom = self.parent.getProtocol().emit("createRoom", {"protocol": "createRoom", "roomId": roomId})
+                        if(createRoom === null) return
+                        createRoom.then((bool) => {
+                            if(!bool){
+                                const err = cc.instantiate(self.prefabs.TITLE_ERROR)
+                                const old = home.getChildByName("Title Error Temp")
+                                if(old !== null){
+                                    home.removeChild(old)
+                                }
+                                err.getChildByName("Error Label").getComponent(cc.Label).string = "Error: 部屋に参加できませんでした"
+                                err.getChildByName("Error Label").color = new cc.Color(255, 255, 255)
+                                home.addChild(err)
+                                return
+                            }
+                            self.changeNode("room")
+                        })
+                    }
+                })
+            }
         }, this)
 
         home.getChildByName("Exit Button").on(cc.Node.EventType.TOUCH_END, () => {
@@ -170,6 +206,16 @@ export class Controller {
             self.parent.getProtocol().emit("addAI", {"protocol": "addAI"}, false)
         }, this)
         roomC.setParent(this.parent)
+        room.getChildByName("Exit Button").on(cc.Node.EventType.TOUCH_END, () => {
+            const result = self.parent.getProtocol().emit("quitRoom", {"protocol": "quitRoom"})
+            if(result === null) return
+            result.then((bool) => {
+                if(bool){
+                    self.changeNode("home")
+                }
+            })
+        }, this)
+
         this.status = "room"
         this.node.addChild(room)
     }
@@ -182,7 +228,7 @@ export class Controller {
         const game = cc.instantiate(this.prefabs.GAME_TEMP)
         const gameC: GameController = game.getComponent("GameController")
         gameC.setParent(this.parent)
-        gameC.setMode("4")//todo
+        gameC.setMode("4")
         this.status = "game"
         this.node.addChild(game)
     }
