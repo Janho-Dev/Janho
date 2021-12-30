@@ -35,7 +35,7 @@ const {ccclass, property} = cc._decorator
 
 @ccclass
 export default class Janho extends cc.Component {
-    readonly VERSION = "ver 1.1.4"
+    readonly VERSION = "ver 1.1.5"
     
     private controller: Controller
     private socket: Socket

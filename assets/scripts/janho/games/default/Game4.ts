@@ -1393,8 +1393,12 @@ export class Game4 implements Game {
         const parsed = JSON.parse(json)
         const parsed2 = JSON.parse(json2)
         if("tehai" in parsed2 && "furo" in parsed2 && "horahai" in parsed2 && "dora" in parsed2 && "uradora" in parsed2){
-            let hai: number[] = parsed2["tehai"]
-            const furo: number[][] = parsed2["furo"]
+            let hai: number[] = this.haiSort(parsed2["tehai"])
+            const _furo: number[][] = parsed2["furo"]
+            let furo: number[][] = []
+            for(let f of _furo){
+                furo.push(this.haiSort(f))
+            }
             const dora: number[] = parsed2["dora"]
             const uradora: number[] = parsed2["uradora"]
             hai.push(500)
