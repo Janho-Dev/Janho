@@ -1863,6 +1863,8 @@ export class Game4 implements Game {
     }
 
     public onResetTestFunc(): void{
+        this.controller.node.getChildByName("Test Button").getChildByName("Background").getChildByName("Label")
+        .getComponent(cc.Label).string = "終了"
         this.controller.node.getChildByName("Test Button").active = true
         const self = this
         this.controller.node.getChildByName("Test Button").once(cc.Node.EventType.TOUCH_END, () => {
