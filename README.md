@@ -10,6 +10,10 @@ README.md 編集中...
   
 牌譜保存機能などはありません。  
 
+<p align="left">
+<img height="200" src="https://github.com/Janho-Dev/Janho/blob/master/assets/resources/example/demo.png"></img><br>
+</p>
+
 ## Demo
 通常版：https://janhoyaba.com  
 予備版：https://sub.janhoyaba.com  
