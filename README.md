@@ -1,6 +1,6 @@
 README.md 編集中...  
 <p align="left">
-<a href="https://janhoyaba.com"><img height="200" src="https://github.com/Janho-Dev/Janho/blob/master/assets/resources/title/janho_logo.png"></img></a><br>
+<a href="https://github.com/Janho-Dev/Janho"><img height="200" src="https://github.com/Janho-Dev/Janho/blob/master/assets/resources/title/janho_logo.png"></img></a><br>
 </p>
 
 ## Description
@@ -15,8 +15,9 @@ README.md 編集中...
 </p>
 
 ## Demo
-通常版：https://janhoyaba.com  
-予備版：https://sub.janhoyaba.com  
+(※Demoは公開を停止しました)  
+通常版：none  
+予備版：none  
 
 ## Licensing information
 This project is licensed under AGPL-3.0. Please see the [LICENSE](/LICENSE) file for details.  
